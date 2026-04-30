@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+// User service
+service UserService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string name = 2;
+  string password = 3;
+}
+
+message CreateUserResponse {
+  string id = 1;
+  string token = 2;
+}
+
+// Lesson service
+service LessonService {
+  rpc GetLessons(GetLessonsRequest) returns (GetLessonsResponse);
+  rpc GetLesson(GetLessonRequest) returns (GetLessonResponse);
+}
+
+message GetLessonsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message Lesson {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string level = 4;
+}
+
+message GetLessonsResponse {
+  repeated Lesson lessons = 1;
+  int32 total = 2;
+}
+
+message GetLessonRequest {
+  string lesson_id = 1;
+}
+
+message GetLessonResponse {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string content = 4;
+  string level = 5;
+}
