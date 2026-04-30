@@ -42,13 +42,11 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: http://host.docker.internal:8080
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=http://host.docker.internal:8080
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
     depends_on:
       - server
     networks:
@@ -65,3 +63,4 @@ networks:
 # - Replace DB credentials with secure values or use an external .env file.
 # - To use Supabase instead of the local Postgres, remove the `postgres` service
 #   and set `SPRING_DATASOURCE_URL`/username/password to your Supabase JDBC credentials (sslmode=require).
+# - Swagger UI is available at http://localhost:8080/swagger-ui.html once the server container is up.
