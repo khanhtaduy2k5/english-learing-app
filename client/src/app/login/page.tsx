@@ -24,6 +24,7 @@ export default function LoginPage() {
       const { token, user } = response.data;
 
       localStorage.setItem("token", token);
+      document.cookie = `token=${token}; Path=/; SameSite=Lax`;
       setToken(token);
       setUser(user);
 

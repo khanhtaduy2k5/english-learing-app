@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const handleLogout = () => {
     logout();
     localStorage.removeItem("token");
+    document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
     router.push("/");
   };
 
