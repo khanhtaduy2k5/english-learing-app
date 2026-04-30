@@ -4,6 +4,11 @@
 
 The Spring Boot server exposes these REST endpoints:
 
+- `GET /api/users` - list users
+- `GET /api/users/{id}` - get a user
+- `POST /api/users` - create a user
+- `PUT /api/users/{id}` - update a user
+- `DELETE /api/users/{id}` - delete a user
 - `POST /api/auth/login` - login with `{ email, password }`
 - `POST /api/auth/register` - register with `{ name, email, password }`
 - `POST /api/auth/logout` - logout current user

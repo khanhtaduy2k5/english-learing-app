@@ -22,19 +22,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @SecurityRequirement(name = "bearerAuth")
 public class LessonController {
 
-  private static final List<LessonDto> LESSONS = List.of(
-      new LessonDto("1", "Greetings and Introductions", "Learn basic greetings and self-introductions.", "Beginner", "Simple dialogues for meeting new people."),
-      new LessonDto("2", "Daily Routines", "Talk about everyday activities and habits.", "Beginner", "Useful vocabulary for morning, afternoon, and evening routines."),
-      new LessonDto("3", "Travel Essentials", "Practice language for airports, hotels, and transport.", "Intermediate", "Common phrases for planning and enjoying a trip.")
-  );
+  private final LessonService lessonService;
+
+  public LessonController(LessonService lessonService) {
+    this.lessonService = lessonService;
+  }
 
   @GetMapping
   @Operation(summary = "List lessons", description = "Return the available lesson summaries for the dashboard")
   @ApiResponse(responseCode = "200", description = "Lesson list returned")
   public List<LessonSummaryDto> getLessons() {
-    return LESSONS.stream()
-        .map(lesson -> new LessonSummaryDto(lesson.id(), lesson.title(), lesson.description(), lesson.level()))
-        .toList();
+    return lessonService.getLessons();
   }
 
   @GetMapping("/{lessonId}")
@@ -44,11 +42,9 @@ public class LessonController {
       @ApiResponse(responseCode = "404", description = "Lesson not found")
   })
   public ResponseEntity<LessonDto> getLesson(@PathVariable String lessonId) {
-    return LESSONS.stream()
-        .filter(lesson -> lesson.id().equals(lessonId))
-        .findFirst()
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    return lessonService.getLesson(lessonId)
+      .map(ResponseEntity::ok)
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   @GetMapping("/{lessonId}/quiz")
@@ -58,28 +54,9 @@ public class LessonController {
       @ApiResponse(responseCode = "404", description = "Quiz not found")
   })
   public ResponseEntity<QuizResponseDto> getQuiz(@PathVariable String lessonId) {
-    return LESSONS.stream()
-        .filter(lesson -> lesson.id().equals(lessonId))
-        .findFirst()
-        .map(lesson -> ResponseEntity.ok(new QuizResponseDto(lesson.id(), sampleQuizFor(lessonId))))
-        .orElseGet(() -> ResponseEntity.notFound().build());
-  }
-
-  private List<QuizQuestionDto> sampleQuizFor(String lessonId) {
-    return List.of(
-        new QuizQuestionDto(
-            lessonId + "-q1",
-            "Which phrase is a greeting?",
-            List.of("Good morning", "Turn left", "I am hungry", "See you later"),
-            "Good morning"
-        ),
-        new QuizQuestionDto(
-            lessonId + "-q2",
-            "What does 'introduce yourself' mean?",
-            List.of("Say your name", "Ask for directions", "Order food", "Book a hotel"),
-            "Say your name"
-        )
-    );
+    return lessonService.getQuiz(lessonId)
+      .map(ResponseEntity::ok)
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
     public record LessonSummaryDto(

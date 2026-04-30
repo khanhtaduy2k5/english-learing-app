@@ -13,10 +13,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Health", description = "Application health and readiness endpoints")
 public class HealthController {
 
+  private final HealthService healthService;
+
+  public HealthController(HealthService healthService) {
+    this.healthService = healthService;
+  }
+
   @GetMapping("/health")
   @Operation(summary = "Health check", description = "Return a simple ok response for monitoring and docker checks")
   public HealthResponse health() {
-    return new HealthResponse("ok");
+    return healthService.health();
   }
 
   public record HealthResponse(

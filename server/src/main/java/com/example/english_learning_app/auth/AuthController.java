@@ -19,6 +19,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Auth", description = "Authentication endpoints for login, registration, and logout")
 public class AuthController {
 
+  private final AuthService authService;
+
+  public AuthController(AuthService authService) {
+    this.authService = authService;
+  }
+
   @PostMapping("/login")
   @Operation(summary = "Login", description = "Return a demo JWT token and user payload for the provided credentials")
   @ApiResponses({
@@ -26,7 +32,7 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid login request")
   })
   public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-    return ResponseEntity.ok(buildResponse(request.email(), request.email().split("@")[0]));
+    return ResponseEntity.ok(authService.login(request.email()));
   }
 
   @PostMapping("/register")
@@ -36,7 +42,7 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid registration request")
   })
   public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-    return ResponseEntity.ok(buildResponse(request.email(), request.name()));
+    return ResponseEntity.ok(authService.register(request.name(), request.email()));
   }
 
   @PostMapping("/logout")
@@ -46,12 +52,7 @@ public class AuthController {
       @ApiResponse(responseCode = "200", description = "Logout successful", content = @Content(schema = @Schema(implementation = LogoutResponse.class)))
   })
   public ResponseEntity<LogoutResponse> logout() {
-    return ResponseEntity.ok(new LogoutResponse("Logged out"));
-  }
-
-  private AuthResponse buildResponse(String email, String name) {
-    var user = new UserDto("user-1", email, name);
-    return new AuthResponse("demo-token", user);
+    return ResponseEntity.ok(authService.logout());
   }
 
   public record AuthRequest(

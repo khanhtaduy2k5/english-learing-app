@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
     info = @Info(
         title = "English Learning App API",
         version = "v1",
-        description = "REST API for debugging auth, lessons, and health endpoints"
+        description = "REST API for debugging auth, users, lessons, and health endpoints"
     )
 )
 @SecurityScheme(
