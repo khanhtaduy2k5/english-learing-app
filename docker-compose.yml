@@ -1,41 +1,35 @@
-version: "3.8"
-
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: secret
-    ports:
-      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-    networks:
-      - english-learning-network
-
-  redis:
-    image: redis:latest
     ports:
-      - "6379:6379"
-    networks:
-      - english-learning-network
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mydatabase?sslmode=disable
-      - SPRING_DATASOURCE_USERNAME=myuser
-      - SPRING_DATASOURCE_PASSWORD=secret
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase?sslmode=disable
+      SPRING_DATASOURCE_USERNAME: myuser
+      SPRING_DATASOURCE_PASSWORD: secret
     depends_on:
-      - postgres
-      - redis
-    networks:
-      - english-learning-network
+      postgres:
+        condition: service_healthy
 
   frontend:
     build:
@@ -43,24 +37,13 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     depends_on:
       - server
-    networks:
-      - english-learning-network
 
 volumes:
   db-data:
-
-networks:
-  english-learning-network:
-    driver: bridge
-
-# Notes:
-# - Replace DB credentials with secure values or use an external .env file.
-# - To use Supabase instead of the local Postgres, remove the `postgres` service
-#   and set `SPRING_DATASOURCE_URL`/username/password to your Supabase JDBC credentials (sslmode=require).
-# - Swagger UI is available at http://localhost:8080/swagger-ui.html once the server container is up.

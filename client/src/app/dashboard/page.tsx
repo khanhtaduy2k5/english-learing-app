@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const { isAuthenticated, user, isReady } = useAuth();
   const { logout } = useAuthStore();
   const router = useRouter();
-  const [lessons, setLessons] = useState([]);
+  const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function DashboardPage() {
     const fetchLessons = async () => {
       try {
         // Replace with actual API endpoint
-        const data = await apiClient.get("/api/lessons");
+        const data = await apiClient.get<any[]>("/api/lessons");
         setLessons(data || []);
       } catch (err) {
         console.error("Failed to fetch lessons:", err);

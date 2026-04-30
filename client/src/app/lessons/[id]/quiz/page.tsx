@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api";
@@ -15,16 +15,18 @@ export default function QuizPage({ params }: { params: { id: string } }) {
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     }
   }, [isAuthenticated, router]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        const data = await apiClient.get(`/api/lessons/${params.id}/quiz`);
+        const data = await apiClient.get<{ questions: any[]; title?: string }>(
+          `/api/lessons/${params.id}/quiz`,
+        );
         setQuiz(data);
         setAnswers(new Array(data?.questions?.length || 0).fill(-1));
       } catch (err) {
