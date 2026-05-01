@@ -10,8 +10,23 @@ services:
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - english-learning-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - english-learning-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,9 +42,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase?sslmode=disable
       SPRING_DATASOURCE_USERNAME: myuser
       SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - english-learning-network
 
   frontend:
     build:
@@ -44,6 +65,12 @@ services:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     depends_on:
       - server
+    networks:
+      - english-learning-network
 
 volumes:
   db-data:
+
+networks:
+  english-learning-network:
+    driver: bridge
