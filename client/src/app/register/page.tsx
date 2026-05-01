@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
@@ -15,6 +15,10 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const nameId = useId();
+  const emailId = useId();
+  const passwordId = useId();
+  const confirmPasswordId = useId();
   const router = useRouter();
   const { setUser, setToken } = useAuthStore();
 
@@ -67,10 +71,14 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor={nameId}
+              className="block text-gray-700 font-medium mb-2"
+            >
               Full Name
             </label>
             <input
+              id={nameId}
               type="text"
               name="name"
               value={formData.name}
@@ -81,10 +89,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor={emailId}
+              className="block text-gray-700 font-medium mb-2"
+            >
               Email
             </label>
             <input
+              id={emailId}
               type="email"
               name="email"
               value={formData.email}
@@ -95,10 +107,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor={passwordId}
+              className="block text-gray-700 font-medium mb-2"
+            >
               Password
             </label>
             <input
+              id={passwordId}
               type="password"
               name="password"
               value={formData.password}
@@ -109,10 +125,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor={confirmPasswordId}
+              className="block text-gray-700 font-medium mb-2"
+            >
               Confirm Password
             </label>
             <input
+              id={confirmPasswordId}
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const emailId = useId();
+  const passwordId = useId();
   const router = useRouter();
   const { setUser, setToken } = useAuthStore();
 
@@ -45,10 +47,14 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor={emailId}
+              className="block text-gray-700 font-medium mb-2"
+            >
               Email
             </label>
             <input
+              id={emailId}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -58,10 +64,14 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
+            <label
+              htmlFor={passwordId}
+              className="block text-gray-700 font-medium mb-2"
+            >
               Password
             </label>
             <input
+              id={passwordId}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
