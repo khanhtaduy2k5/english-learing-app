@@ -14,7 +14,9 @@ describe("Button", () => {
   it("shows loading state and disables interaction", () => {
     render(<Button loading>Submit</Button>);
 
-    const button = screen.getByRole("button", { name: "Loading..." });
+    const button = screen.getByRole("button", {
+      name: "Loading...",
+    }) as HTMLButtonElement;
 
     expect(button.disabled).toBe(true);
   });
