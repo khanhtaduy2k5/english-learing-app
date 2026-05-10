@@ -32,12 +32,12 @@ This skill provides expertise for developing features across the entire English 
 │  - REST Endpoints, Services, Data Logic │
 │  - server/src/main/java/com/example/   │
 └──────────────┬──────────────────────────┘
-               │ Database Access
+               │ JDBC (Supabase Pooler)
                │
 ┌──────────────▼──────────────────────────┐
-│  Database & Infrastructure              │
-│  - Docker Compose, Configuration        │
-│  - docker-compose.yml                   │
+│  Database (Supabase PostgreSQL)         │
+│  - Cloud-hosted, Session Pooler (IPv4)  │
+│  - Redis for caching (optional)         │
 └─────────────────────────────────────────┘
 ```
 
@@ -94,9 +94,7 @@ The frontend API client handles:
 ### State Management Pattern
 
 - **authStore**: Authentication state and user info
-- **lessonStore**: Cached lesson data
-- **uiStore**: Transient UI state (modals, notifications)
-- **Backend**: Single source of truth for persistent data
+- **Backend**: Single source of truth for persistent data (Supabase PostgreSQL)
 
 ## Common Full-Stack Tasks
 
@@ -115,23 +113,24 @@ The frontend API client handles:
 **Frontend Steps:**
 
 ```tsx
-// 1. Create Zustand store for lessons
+// 1. Add API client methods in lib/api.ts
 // 2. Create React components for UI
-// 3. Add API client methods in lib/api.ts
-// 4. Integrate state with components
-// 5. Write component and E2E tests
+// 3. Integrate state with components
+// 4. Write component tests in __tests__/
+// 5. Write E2E tests in e2e/
 ```
 
 **DevOps Steps:**
 
 ```bash
 # Verify Docker builds with new dependencies
-docker-compose build
+docker compose build
 
 # Test in containerized environment
-docker-compose up
+docker compose up -d
 
-# Verify both services are healthy
+# Verify services are healthy
+docker compose ps
 ```
 
 ### Debugging End-to-End Issues
@@ -139,7 +138,7 @@ docker-compose up
 1. **Check Backend Logs**
 
    ```bash
-   docker-compose logs backend
+   docker compose logs server
    ```
 
 2. **Verify API Response**
@@ -153,11 +152,11 @@ docker-compose up
 4. **Check Docker Networking**
 
    ```bash
-   docker-compose exec frontend ping backend
+   docker compose exec frontend ping server
    ```
 
 5. **Check Environment Variables**
-   - Verify `NEXT_PUBLIC_API_URL` matches backend service name
+   - Verify `NEXT_PUBLIC_API_BASE_URL` matches backend URL
 
 ## Directory Navigation
 
@@ -165,18 +164,20 @@ docker-compose up
 english-learning-app/
 ├── client/                 # Frontend (Next.js)
 │   ├── src/app/           # Pages (App Router)
-│   ├── src/components/    # React components
+│   ├── src/components/    # React components (Sidebar, Button, Input)
 │   ├── src/hooks/         # Custom hooks (useAuth)
-│   ├── src/store/         # Zustand stores
+│   ├── src/store/         # Zustand stores (authStore)
 │   ├── src/lib/           # API client, utilities
-│   └── e2e/               # Playwright tests
+│   ├── __tests__/         # Centralized unit tests (Vitest)
+│   └── e2e/               # Playwright E2E tests
 │
 ├── server/                # Backend (Spring Boot)
 │   ├── src/main/java/     # Application code
-│   ├── src/test/java/     # Tests
+│   ├── src/test/java/     # Tests (JUnit + Mockito)
+│   ├── .env               # Supabase credentials (not committed)
 │   └── pom.xml            # Maven configuration
 │
-├── docker-compose.yml     # Multi-container setup
+├── docker-compose.yml     # Multi-container setup (server + frontend + redis)
 └── docs/                  # Documentation
     ├── API.md            # API specification
     ├── ARCHITECTURE.md   # Architecture overview
@@ -186,39 +187,55 @@ english-learning-app/
 
 ## Environment Setup
 
-### Development
+### Development (Local)
 
 ```bash
-# Start all services
-docker-compose up -d
+# Backend
+cd server
+.\mvnw spring-boot:run    # Reads .env automatically
 
-# Frontend available at: http://localhost:3000
-# Backend available at: http://localhost:8080
+# Frontend
+cd client
+npm run dev
+
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8080
+```
+
+### Development (Docker)
+
+```bash
+docker compose up -d --build
+
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8080
 ```
 
 ### Testing
 
 ```bash
-# Run all tests
-docker-compose exec backend mvnw test
-docker-compose exec frontend npm test
+# Client unit tests
+cd client && npm test
 
-# Run E2E tests
-docker-compose exec frontend npm run test:e2e
+# Server unit tests
+cd server && .\mvnw test
+
+# E2E tests
+cd client && npm run test:e2e
 ```
 
 ## Communication Between Services
 
 ### Docker Compose Service Names
 
-- Frontend service: `frontend` (or container name)
-- Backend service: `backend` (or container name)
-- Frontend can reach backend at: `http://backend:8080` (from within container)
+- Frontend service: `frontend`
+- Backend service: `server`
+- Frontend reaches backend at: `http://localhost:8080` (via port mapping)
 
 ### Environment Variables
 
-- Frontend needs `NEXT_PUBLIC_API_URL` environment variable
-- Point to backend service URL (e.g., `http://backend:8080`)
+- Frontend needs `NEXT_PUBLIC_API_BASE_URL` environment variable
+- Backend reads Supabase credentials from `server/.env` via `env_file`
 
 ## Related Documentation
 

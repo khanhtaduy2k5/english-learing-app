@@ -20,7 +20,7 @@ This skill provides expertise for developing the Next.js frontend of the English
 
 - Building React components with TypeScript
 - Implementing routing with Next.js App Router
-- Styling with Tailwind CSS
+- Styling with Tailwind CSS (Dark Mode theme)
 - Writing unit tests with Vitest and JSDOM
 - Creating E2E tests with Playwright
 - Managing client-side state with Zustand
@@ -28,10 +28,11 @@ This skill provides expertise for developing the Next.js frontend of the English
 ## Key Directories
 
 - `client/src/app/` - Next.js pages and layouts (App Router)
-- `client/src/components/` - Reusable React components
-- `client/src/hooks/` - Custom React hooks (useAuth, etc.)
-- `client/src/store/` - Zustand state management
+- `client/src/components/` - Reusable React components (Sidebar, Button, Input)
+- `client/src/hooks/` - Custom React hooks (useAuth)
+- `client/src/store/` - Zustand state management (authStore)
 - `client/src/lib/` - Utilities and API client
+- `client/__tests__/` - Centralized unit tests (Vitest)
 - `client/e2e/` - Playwright E2E tests
 
 ## Common Tasks
@@ -63,51 +64,59 @@ npm run start
 
 ### Pages
 
-- `/app/page.tsx` - Home page
-- `/app/dashboard/page.tsx` - User dashboard
+- `/app/page.tsx` - Landing page (Dark Mode, Glassmorphism)
+- `/app/dashboard/layout.tsx` - Dashboard layout with Sidebar
+- `/app/dashboard/page.tsx` - User dashboard (stats, quick actions)
 - `/app/login/page.tsx` - Login page
 - `/app/register/page.tsx` - Registration page
 - `/app/lessons/[id]/` - Lesson detail page
 
 ### Components
 
-- `Button.tsx`, `Input.tsx`, `Card.tsx`, `Alert.tsx` - UI components
-- `Button.test.tsx`, `Input.test.tsx` - Component tests
+- `Sidebar.tsx` - Dashboard navigation sidebar (collapsible, Dark Mode)
+- `Button.tsx` - Reusable button component
+- `Input.tsx` - Reusable input component with label and error
 
 ### State Management
 
-- `authStore.ts` - Authentication state (Zustand)
-- `lessonStore.ts` - Lesson data state
-- `uiStore.ts` - UI state (modals, notifications)
+- `authStore.ts` - Authentication state (user, token, isAuthenticated)
 
 ### Authentication
 
-- `middleware.ts` - Next.js middleware for protected routes
-- `hooks/useAuth.ts` - Custom hook for auth logic
+- `hooks/useAuth.ts` - Custom hook wrapping authStore with `isReady` flag
+- Dashboard layout handles auth redirect (no middleware needed)
 
 ### API Integration
 
-- `lib/api.ts` - Client for communicating with backend
-- `API_SCHEMA.proto` - Protocol Buffer definitions
+- `lib/api.ts` - Axios-based API client with interceptors for auth tokens
 
-## Best Practices
+## Design System
 
-1. Use TypeScript for type safety
-2. Compose components for reusability
-3. Keep state management minimal with Zustand
-4. Test components and hooks thoroughly
-5. Use Tailwind CSS utilities for styling (avoid custom CSS when possible)
-6. Write E2E tests for critical user flows
-7. Leverage Next.js middleware for authentication
+The app uses a **Dark Mode** design language:
+
+- **Background**: `#030712` (near-black)
+- **Accent Colors**: Indigo/Purple gradients
+- **Glass Effects**: `bg-white/5`, `backdrop-blur-xl`, `border-white/10`
+- **Typography**: Inter (Google Fonts)
+- **Active States**: Gradient borders with glow effects
 
 ## Testing Guidelines
 
-- **Unit Tests**: Test individual components and hooks
-- **E2E Tests**: Test complete user journeys (login → lesson interaction)
-- **Mocking**: Mock API calls and external services
+- **Unit Tests**: Located in `__tests__/` folder (centralized)
+  - `__tests__/components/` - Component tests
+  - `__tests__/hooks/` - Hook tests
+  - `__tests__/lib/` - Utility and API tests
+  - `__tests__/store/` - Store tests
+- **E2E Tests**: Located in `e2e/` folder
+- **Mocking**: Mock API calls and Zustand stores with Vitest `vi.mock()`
+
+## ESLint Notes
+
+- Escape special characters in JSX text: use `&apos;` for `'`, `&quot;` for `"`
+- This avoids `react/no-unescaped-entities` build errors
 
 ## Related Docs
 
-- `client/SETUP.md` - Frontend setup instructions
+- `docs/SETUP.md` - Frontend setup instructions
 - `docs/ARCHITECTURE.md` - Overall application architecture
 - `docs/CONTRIBUTING.md` - Contribution guidelines

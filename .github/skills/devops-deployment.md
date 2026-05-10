@@ -27,30 +27,38 @@ This skill provides expertise for containerizing and deploying the English Learn
 
 ## Key Files
 
-- `docker-compose.yml` - Multi-container orchestration configuration
+- `docker-compose.yml` - Multi-container orchestration (server, frontend, redis)
 - `server/Dockerfile` - Backend (Spring Boot) container image
 - `client/Dockerfile` - Frontend (Next.js) container image
+- `server/.env` - Supabase database credentials (not committed)
 - `docs/DEPLOYMENT.md` - Deployment guide
 
 ## Container Structure
 
-### Backend Service
+### Backend Service (`server`)
 
-- **Image**: Spring Boot application
-- **Port**: 8080 (configurable)
-- **Build**: Maven-based build in Dockerfile
-- **Volumes**: For development hot-reload (optional)
+- **Image**: Spring Boot application (Eclipse Temurin 21 JRE)
+- **Port**: 8080
+- **Build**: Multi-stage Maven build
+- **Database**: Connects to Supabase PostgreSQL via Session Pooler
+- **Health Check**: `GET /api/health`
 
-### Frontend Service
+### Frontend Service (`frontend`)
 
-- **Image**: Next.js application
-- **Port**: 3000 (configurable)
-- **Build**: Node.js-based multi-stage build
-- **Dependencies**: Depends on backend service
+- **Image**: Next.js application (Node 20 Alpine)
+- **Port**: 3000
+- **Build**: Multi-stage Node.js build
+- **Dependencies**: Depends on server service being healthy
+
+### Redis Service (`redis`)
+
+- **Image**: Redis 7 Alpine
+- **Port**: 6379
+- **Usage**: Caching (optional)
 
 ### Network
 
-- Custom bridge network for inter-container communication
+- Custom bridge network `english-learning-network`
 - Service discovery via container names
 
 ## Common Tasks
@@ -58,46 +66,47 @@ This skill provides expertise for containerizing and deploying the English Learn
 ### Building Containers
 
 ```bash
-docker-compose build
+docker compose build
 ```
 
 ### Starting Services
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Stopping Services
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Viewing Logs
 
 ```bash
-docker-compose logs -f backend
-docker-compose logs -f frontend
+docker compose logs -f server
+docker compose logs -f frontend
 ```
 
 ### Rebuilding After Code Changes
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Environment Configuration
 
-### Backend Environment Variables
+### Backend Environment Variables (server/.env)
 
-- `SPRING_PROFILES_ACTIVE` - Application profile (dev, test, prod)
-- `SERVER_PORT` - Port for Spring Boot application
-- Database connection settings
+- `SPRING_DATASOURCE_URL` - JDBC connection string (Supabase Pooler)
+- `SPRING_DATASOURCE_USERNAME` - Database username (e.g. `postgres.project_id`)
+- `SPRING_DATASOURCE_PASSWORD` - Database password
+- `SPRING_REDIS_HOST` - Redis hostname (set in docker-compose.yml)
+- `SPRING_REDIS_PORT` - Redis port (set in docker-compose.yml)
 
 ### Frontend Environment Variables
 
-- `NEXT_PUBLIC_API_URL` - Backend API endpoint URL
-- `NODE_ENV` - Environment (development, production)
+- `NEXT_PUBLIC_API_BASE_URL` - Backend API endpoint (e.g. `http://localhost:8080`)
 
 ## Dockerfile Best Practices
 
@@ -111,26 +120,27 @@ docker-compose up -d --build
 ## Docker Compose Best Practices
 
 1. Define services with explicit names for DNS resolution
-2. Use `depends_on` to manage startup order
-3. Configure health checks for automatic restart
-4. Mount volumes for development workflows
-5. Use `.env` files for sensitive configuration
-6. Version the docker-compose.yml format appropriately
+2. Use `depends_on` with `condition: service_healthy` for proper startup order
+3. Configure health checks for automatic restart and dependency management
+4. Use `env_file` for sensitive configuration (not hardcoded in compose file)
+5. Remove unused services (e.g. local postgres when using Supabase)
 
 ## Deployment Scenarios
 
 ### Local Development
 
 ```bash
-docker-compose -f docker-compose.yml up
+docker compose up -d --build
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8080
 ```
 
 ### Production Deployment
 
 - Push images to container registry (Docker Hub, ECR, GCR, etc.)
 - Use environment-specific compose files or Kubernetes
-- Configure persistent volumes for data
-- Set up reverse proxy (Nginx) for SSL/TLS
+- Configure SSL/TLS via reverse proxy (Nginx, Traefik)
+- Ensure database credentials are managed via secrets
 
 ## Related Docs
 

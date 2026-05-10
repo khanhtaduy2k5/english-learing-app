@@ -1,23 +1,4 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - english-learning-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -48,6 +29,12 @@ services:
         condition: service_healthy
     networks:
       - english-learning-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   frontend:
     build:
@@ -61,12 +48,10 @@ services:
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     networks:
       - english-learning-network
-
-volumes:
-  db-data:
 
 networks:
   english-learning-network:
