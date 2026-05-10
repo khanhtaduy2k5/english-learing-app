@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
@@ -10,10 +10,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const emailId = useId();
   const passwordId = useId();
   const router = useRouter();
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("registered") === "true") {
+        setSuccessMsg("Registration successful! Please sign in.");
+        // Clean up the URL to prevent showing the message again on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
   const { setUser, setToken } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,6 +112,12 @@ export default function LoginPage() {
             </div>
           )}
 
+          {successMsg && (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm">
+              {successMsg}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
@@ -110,7 +128,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center mt-8 text-slate-400 text-sm">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
             className="text-indigo-400 font-medium hover:text-indigo-300 transition-colors"

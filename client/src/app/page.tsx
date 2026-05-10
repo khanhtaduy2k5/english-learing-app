@@ -228,7 +228,7 @@ export default function Home() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-slate-300 mb-8 leading-relaxed">"{i === 1 ? 'This app completely changed the way I learn. The AI pronunciation feedback is incredible and the lessons are engaging.' : i === 2 ? 'I used to struggle with speaking, but Lingua gave me the confidence to finally converse fluently. Highly recommended!' : 'The structured curriculum makes learning English feel effortless. I advanced from beginner to intermediate in just a few months.'}"</p>
+                <p className="text-slate-300 mb-8 leading-relaxed">&quot;{i === 1 ? 'This app completely changed the way I learn. The AI pronunciation feedback is incredible and the lessons are engaging.' : i === 2 ? 'I used to struggle with speaking, but Lingua gave me the confidence to finally converse fluently. Highly recommended!' : 'The structured curriculum makes learning English feel effortless. I advanced from beginner to intermediate in just a few months.'}&quot;</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     {['S', 'M', 'A'][i-1]}

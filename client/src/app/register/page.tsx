@@ -47,8 +47,8 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      // Instead of auto-logging in, we redirect to the login page
-      router.push("/login");
+      // Instead of auto-logging in, we redirect to the login page with a query param
+      router.push("/login?registered=true");
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
