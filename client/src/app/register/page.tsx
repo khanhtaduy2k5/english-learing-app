@@ -47,14 +47,8 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      const { token, user } = response.data;
-
-      localStorage.setItem("token", token);
-      document.cookie = `token=${token}; Path=/; SameSite=Lax`;
-      setToken(token);
-      setUser(user);
-
-      router.push("/dashboard");
+      // Instead of auto-logging in, we redirect to the login page
+      router.push("/login");
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
@@ -63,17 +57,29 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">
+    <div className="min-h-screen bg-[#030712] text-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className="bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md backdrop-blur-xl relative z-10">
+        <div className="flex justify-center mb-6">
+          <Link href="/" className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </Link>
+        </div>
+        
+        <h1 className="text-3xl font-bold text-center mb-2 text-white">
           Create Account
         </h1>
+        <p className="text-slate-400 text-center mb-8">Start your journey to fluency today.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor={nameId}
-              className="block text-gray-700 font-medium mb-2"
+              className="block text-sm font-medium text-slate-300 mb-2"
             >
               Full Name
             </label>
@@ -83,7 +89,8 @@ export default function RegisterPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
+              placeholder="John Doe"
               required
             />
           </div>
@@ -91,9 +98,9 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor={emailId}
-              className="block text-gray-700 font-medium mb-2"
+              className="block text-sm font-medium text-slate-300 mb-2"
             >
-              Email
+              Email address
             </label>
             <input
               id={emailId}
@@ -101,7 +108,8 @@ export default function RegisterPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
+              placeholder="you@example.com"
               required
             />
           </div>
@@ -109,7 +117,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor={passwordId}
-              className="block text-gray-700 font-medium mb-2"
+              className="block text-sm font-medium text-slate-300 mb-2"
             >
               Password
             </label>
@@ -119,7 +127,8 @@ export default function RegisterPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
+              placeholder="••••••••"
               required
             />
           </div>
@@ -127,7 +136,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor={confirmPasswordId}
-              className="block text-gray-700 font-medium mb-2"
+              className="block text-sm font-medium text-slate-300 mb-2"
             >
               Confirm Password
             </label>
@@ -137,13 +146,14 @@ export default function RegisterPage() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
+              placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">
+            <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm">
               {error}
             </div>
           )}
@@ -151,19 +161,19 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+            className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 transition-all duration-300 shadow-lg shadow-purple-500/25 mt-6"
           >
             {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
-        <p className="text-center mt-6 text-gray-600">
+        <p className="text-center mt-8 text-slate-400 text-sm">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="text-blue-600 font-semibold hover:underline"
+            className="text-purple-400 font-medium hover:text-purple-300 transition-colors"
           >
-            Login
+            Sign in
           </Link>
         </p>
       </div>
