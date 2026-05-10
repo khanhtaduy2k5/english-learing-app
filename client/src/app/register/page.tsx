@@ -4,7 +4,6 @@ import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,7 +19,6 @@ export default function RegisterPage() {
   const passwordId = useId();
   const confirmPasswordId = useId();
   const router = useRouter();
-  const { setUser, setToken } = useAuthStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -41,7 +39,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await apiClient.register({
+      await apiClient.register({
         name: formData.name,
         email: formData.email,
         password: formData.password,

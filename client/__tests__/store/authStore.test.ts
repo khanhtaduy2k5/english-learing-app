@@ -22,7 +22,7 @@ describe("authStore", () => {
   });
 
   it("setUser updates user and sets isAuthenticated to true", () => {
-    const mockUser = { id: "1", name: "Test User", email: "test@example.com" };
+    const mockUser: any = { id: "1", name: "Test User", email: "test@example.com", role: "USER", createdAt: new Date().toISOString() };
 
     useAuthStore.getState().setUser(mockUser);
 
@@ -39,7 +39,7 @@ describe("authStore", () => {
   });
 
   it("logout clears all auth state", () => {
-    const mockUser = { id: "1", name: "Test User", email: "test@example.com" };
+    const mockUser: any = { id: "1", name: "Test User", email: "test@example.com", role: "USER", createdAt: new Date().toISOString() };
 
     // Set up authenticated state
     useAuthStore.getState().setUser(mockUser);
@@ -59,7 +59,7 @@ describe("authStore", () => {
 
   it("setUser does not affect token", () => {
     useAuthStore.getState().setToken("my-token");
-    useAuthStore.getState().setUser({ id: "2", name: "Another", email: "a@b.com" });
+    useAuthStore.getState().setUser({ id: "2", name: "Another", email: "a@b.com", role: "USER", createdAt: new Date().toISOString() } as any);
 
     const state = useAuthStore.getState();
     expect(state.token).toBe("my-token");
