@@ -4,10 +4,10 @@ test("home page routes to register page", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: /learn english fluently/i }),
+    page.getByRole("heading", { name: /master english with/i }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: /get started now/i }).click();
+  await page.getByRole("button", { name: /get started for free/i }).click();
 
   await expect(
     page.getByRole("heading", { name: /create account/i }),
