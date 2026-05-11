@@ -1,0 +1,9 @@
+target/
+*.iml
+.idea/
+.vscode/
+.git/
+*.md
+!HELP.md
+.gitignore
+.gitattributes

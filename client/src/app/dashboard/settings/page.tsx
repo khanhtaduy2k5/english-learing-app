@@ -2,11 +2,92 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme, ThemeMode } from "@/context/ThemeContext";
 
 type SettingsTab = "profile" | "notifications" | "appearance" | "account";
 
+/* ── Icons ── */
+const SunIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+      d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+  </svg>
+);
+
+const MonitorIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>
+);
+
+const themeOptions: { id: ThemeMode; label: string; desc: string; icon: JSX.Element; preview: JSX.Element }[] = [
+  {
+    id: "light",
+    label: "Light",
+    desc: "Bright & clean interface",
+    icon: <SunIcon />,
+    preview: (
+      <div className="w-full h-16 rounded-lg overflow-hidden border border-black/10 flex flex-col gap-1 p-2 bg-slate-100">
+        <div className="flex gap-1">
+          <div className="w-6 h-1.5 rounded-full bg-slate-300" />
+          <div className="w-10 h-1.5 rounded-full bg-indigo-300" />
+        </div>
+        <div className="flex gap-1 mt-auto">
+          <div className="w-4 h-4 rounded bg-white border border-slate-200" />
+          <div className="flex-1 h-4 rounded bg-white border border-slate-200" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "dark",
+    label: "Dark",
+    desc: "Easy on the eyes at night",
+    icon: <MoonIcon />,
+    preview: (
+      <div className="w-full h-16 rounded-lg overflow-hidden border border-white/10 flex flex-col gap-1 p-2 bg-[#030712]">
+        <div className="flex gap-1">
+          <div className="w-6 h-1.5 rounded-full bg-slate-700" />
+          <div className="w-10 h-1.5 rounded-full bg-indigo-700" />
+        </div>
+        <div className="flex gap-1 mt-auto">
+          <div className="w-4 h-4 rounded bg-white/5 border border-white/10" />
+          <div className="flex-1 h-4 rounded bg-white/5 border border-white/10" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "system",
+    label: "System",
+    desc: "Follows OS preference",
+    icon: <MonitorIcon />,
+    preview: (
+      <div className="w-full h-16 rounded-lg overflow-hidden border border-white/10 flex">
+        <div className="flex-1 bg-slate-100 flex flex-col gap-1 p-2">
+          <div className="w-6 h-1.5 rounded-full bg-slate-300" />
+          <div className="w-4 h-1.5 rounded-full bg-indigo-300" />
+        </div>
+        <div className="flex-1 bg-[#030712] flex flex-col gap-1 p-2">
+          <div className="w-6 h-1.5 rounded-full bg-slate-700" />
+          <div className="w-4 h-1.5 rounded-full bg-indigo-700" />
+        </div>
+      </div>
+    ),
+  },
+];
+
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [dailyGoal, setDailyGoal] = useState(30);
   const [notifications, setNotifications] = useState({
@@ -16,7 +97,6 @@ export default function SettingsPage() {
     newContent: true,
     achievements: true,
   });
-  const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState("en");
   const [saved, setSaved] = useState(false);
 
@@ -106,7 +186,8 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 max-w-2xl">
-          {/* Profile Tab */}
+
+          {/* ── Profile Tab ── */}
           {activeTab === "profile" && (
             <div className="space-y-6">
               <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5">
@@ -142,10 +223,7 @@ export default function SettingsPage() {
                     <label className="block text-sm font-medium text-slate-300 mb-2">Daily Learning Goal</label>
                     <div className="flex items-center gap-4">
                       <input
-                        type="range"
-                        min={5}
-                        max={120}
-                        step={5}
+                        type="range" min={5} max={120} step={5}
                         value={dailyGoal}
                         onChange={(e) => setDailyGoal(Number(e.target.value))}
                         className="flex-1 accent-indigo-500"
@@ -158,7 +236,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Notifications Tab */}
+          {/* ── Notifications Tab ── */}
           {activeTab === "notifications" && (
             <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5">
               <h3 className="text-lg font-bold text-white mb-6">Notification Preferences</h3>
@@ -177,13 +255,9 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={() => setNotifications((n) => ({ ...n, [item.key]: !n[item.key] }))}
-                      className={`relative w-12 h-6 rounded-full transition-all duration-300 ${
-                        notifications[item.key] ? "bg-indigo-500" : "bg-white/10"
-                      }`}
+                      className={`relative w-12 h-6 rounded-full transition-all duration-300 ${notifications[item.key] ? "bg-indigo-500" : "bg-white/10"}`}
                     >
-                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300 ${
-                        notifications[item.key] ? "left-6" : "left-0.5"
-                      }`}></div>
+                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300 ${notifications[item.key] ? "left-6" : "left-0.5"}`} />
                     </button>
                   </div>
                 ))}
@@ -191,33 +265,80 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Appearance Tab */}
+          {/* ── Appearance Tab ── */}
           {activeTab === "appearance" && (
             <div className="space-y-6">
+
+              {/* Theme Selector */}
               <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5">
-                <h3 className="text-lg font-bold text-white mb-6">Theme</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { id: "dark", label: "Dark", preview: "bg-[#030712]" },
-                    { id: "light", label: "Light", preview: "bg-slate-100" },
-                    { id: "system", label: "System", preview: "bg-gradient-to-r from-[#030712] to-slate-100" },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTheme(t.id)}
-                      className={`p-4 rounded-xl border transition-all ${
-                        theme === t.id
-                          ? "border-indigo-500/30 bg-indigo-500/10"
-                          : "border-white/5 bg-white/[0.02] hover:bg-white/[0.05]"
-                      }`}
-                    >
-                      <div className={`w-full h-12 rounded-lg mb-3 ${t.preview} border border-white/10`}></div>
-                      <p className={`text-sm font-medium ${theme === t.id ? "text-indigo-300" : "text-slate-400"}`}>{t.label}</p>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Interface Theme</h3>
+                    <p className="text-slate-500 text-xs mt-0.5">Choose how the app looks for you</p>
+                  </div>
+                  {/* Live badge */}
+                  <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                    resolvedTheme === "dark"
+                      ? "bg-slate-800/60 border-slate-700 text-slate-300"
+                      : "bg-amber-50 border-amber-200 text-amber-700"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${resolvedTheme === "dark" ? "bg-slate-400" : "bg-amber-400"}`} />
+                    {resolvedTheme === "dark" ? "Dark mode active" : "Light mode active"}
+                  </span>
                 </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {themeOptions.map((opt) => {
+                    const isActive = theme === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        id={`theme-option-${opt.id}`}
+                        onClick={() => setTheme(opt.id)}
+                        className={`group relative flex flex-col p-4 rounded-2xl border transition-all duration-300 text-left ${
+                          isActive
+                            ? "border-indigo-500/50 bg-indigo-500/10 shadow-lg shadow-indigo-500/10"
+                            : "border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        {/* Active checkmark */}
+                        {isActive && (
+                          <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                        )}
+
+                        {/* Preview */}
+                        <div className="mb-3">{opt.preview}</div>
+
+                        {/* Icon + label */}
+                        <div className={`flex items-center gap-2 mb-0.5 ${isActive ? "text-indigo-300" : "text-slate-400 group-hover:text-slate-300"}`}>
+                          {opt.icon}
+                          <span className="text-sm font-semibold">{opt.label}</span>
+                        </div>
+                        <p className="text-xs text-slate-600">{opt.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* System hint */}
+                {theme === "system" && (
+                  <div className="mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                    <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-xs text-blue-400">
+                      Currently using <strong>{resolvedTheme}</strong> mode based on your OS setting.
+                      Change your system appearance to switch automatically.
+                    </p>
+                  </div>
+                )}
               </div>
 
+              {/* Interface Language */}
               <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5">
                 <h3 className="text-lg font-bold text-white mb-6">Interface Language</h3>
                 <select
@@ -234,39 +355,28 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Account Tab */}
+          {/* ── Account Tab ── */}
           {activeTab === "account" && (
             <div className="space-y-6">
               <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/5">
                 <h3 className="text-lg font-bold text-white mb-6">Change Password</h3>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Current Password</label>
-                    <input
-                      type="password"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">New Password</label>
-                    <input
-                      type="password"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Confirm New Password</label>
-                    <input
-                      type="password"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
-                      placeholder="••••••••"
-                    />
-                  </div>
+                  {[
+                    { label: "Current Password", placeholder: "••••••••" },
+                    { label: "New Password", placeholder: "••••••••" },
+                    { label: "Confirm New Password", placeholder: "••••••••" },
+                  ].map((f) => (
+                    <div key={f.label}>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">{f.label}</label>
+                      <input
+                        type="password"
+                        placeholder={f.placeholder}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-
               <div className="p-6 rounded-2xl bg-rose-500/5 border border-rose-500/10">
                 <h3 className="text-lg font-bold text-rose-400 mb-2">Danger Zone</h3>
                 <p className="text-slate-400 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
