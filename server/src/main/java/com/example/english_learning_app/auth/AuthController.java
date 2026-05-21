@@ -1,11 +1,13 @@
 package com.example.english_learning_app.auth;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,8 +33,8 @@ public class AuthController {
       @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
       @ApiResponse(responseCode = "400", description = "Invalid login request")
   })
-  public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-    return ResponseEntity.ok(authService.login(request.email()));
+  public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
+    return ResponseEntity.ok(authService.login(request.email(), request.password()));
   }
 
   @PostMapping("/register")
@@ -41,8 +43,8 @@ public class AuthController {
       @ApiResponse(responseCode = "200", description = "Registration successful", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
       @ApiResponse(responseCode = "400", description = "Invalid registration request")
   })
-  public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-    return ResponseEntity.ok(authService.register(request.name(), request.email()));
+  public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    return ResponseEntity.ok(authService.register(request.name(), request.email(), request.password()));
   }
 
   @PostMapping("/logout")
@@ -56,12 +58,20 @@ public class AuthController {
   }
 
   public record AuthRequest(
+      @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Email
       @Schema(description = "User email address", example = "student@example.com") String email,
+      @jakarta.validation.constraints.NotBlank
       @Schema(description = "User password", example = "password123") String password) {}
 
   public record RegisterRequest(
+      @NotBlank(message = "Name is required") 
+      @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "Invalid characters in name")
       @Schema(description = "Display name", example = "Nguyen Van A") String name,
+      @NotBlank(message = "Email is required") 
+      @Email(message = "Invalid email format") 
       @Schema(description = "User email address", example = "student@example.com") String email,
+      @NotBlank(message = "Password is required")
+      @jakarta.validation.constraints.Size(min = 8, message = "Password must be at least 8 characters")
       @Schema(description = "User password", example = "password123") String password) {}
 
   public record UserDto(

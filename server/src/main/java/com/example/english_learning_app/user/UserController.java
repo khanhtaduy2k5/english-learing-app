@@ -62,7 +62,7 @@ public class UserController {
       @ApiResponse(responseCode = "409", description = "Email already exists")
   })
   public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserUpsertRequest request) {
-    var user = userService.create(request.name(), request.email());
+    var user = userService.create(request.name(), request.email(), "defaultPassword123!");
     return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(user));
   }
 

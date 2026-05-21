@@ -61,6 +61,19 @@ class ApiClient {
     return this.client.post("/api/auth/logout");
   }
 
+  // Wordle endpoints
+  async startWordleGame() {
+    return this.client.post("/api/wordle/start");
+  }
+
+  async getWordleGame(id: string) {
+    return this.client.get(`/api/wordle/${id}`);
+  }
+
+  async makeWordleGuess(id: string, guess: string) {
+    return this.client.post(`/api/wordle/${id}/guess`, null, { params: { guess } });
+  }
+
   // Generic GET
   async get<T>(url: string) {
     const response = await this.client.get<T>(url);

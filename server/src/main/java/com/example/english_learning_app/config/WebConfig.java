@@ -9,15 +9,20 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig {
 
   @Bean
-  public WebMvcConfigurer corsConfigurer() {
+  public WebMvcConfigurer corsConfigurer(RateLimitInterceptor rateLimitInterceptor) {
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-            .allowedOriginPatterns("*")
+            .allowedOrigins("http://localhost:5173")
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true);
+      }
+
+      @Override
+      public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
+          registry.addInterceptor(rateLimitInterceptor).addPathPatterns("/api/auth/login", "/api/auth/register");
       }
     };
   }

@@ -22,12 +22,16 @@ public class User {
   @Column(nullable = false, unique = true)
   private String email;
 
+  @Column(name = "password_hash", nullable = false)
+  private String password;
+
   protected User() {
   }
 
-  public User(String name, String email) {
+  public User(String name, String email, String password) {
     this.name = name;
     this.email = email;
+    this.password = password;
   }
 
   @PrePersist
@@ -55,5 +59,13 @@ public class User {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 }

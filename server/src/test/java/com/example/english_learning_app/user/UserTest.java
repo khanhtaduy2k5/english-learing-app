@@ -10,7 +10,7 @@ class UserTest {
 
   @Test
   void constructorSetsNameAndEmail() {
-    User user = new User("Nguyen Van A", "student@example.com");
+    User user = new User("Nguyen Van A", "student@example.com", "password");
 
     assertEquals("Nguyen Van A", user.getName());
     assertEquals("student@example.com", user.getEmail());
@@ -18,14 +18,14 @@ class UserTest {
 
   @Test
   void idIsNullBeforePersist() {
-    User user = new User("Test", "test@example.com");
+    User user = new User("Test", "test@example.com", "password");
 
     assertNull(user.getId());
   }
 
   @Test
   void assignIdGeneratesUuidWhenIdIsNull() {
-    User user = new User("Test", "test@example.com");
+    User user = new User("Test", "test@example.com", "password");
     // Simulate @PrePersist
     user.assignId();
 
@@ -35,7 +35,7 @@ class UserTest {
 
   @Test
   void assignIdDoesNotOverwriteExistingId() {
-    User user = new User("Test", "test@example.com");
+    User user = new User("Test", "test@example.com", "password");
     user.assignId();
     String firstId = user.getId();
 
@@ -47,7 +47,7 @@ class UserTest {
 
   @Test
   void setNameUpdatesName() {
-    User user = new User("Original", "test@example.com");
+    User user = new User("Original", "test@example.com", "password");
     user.setName("Updated Name");
 
     assertEquals("Updated Name", user.getName());
@@ -55,7 +55,7 @@ class UserTest {
 
   @Test
   void setEmailUpdatesEmail() {
-    User user = new User("Test", "original@example.com");
+    User user = new User("Test", "original@example.com", "password");
     user.setEmail("updated@example.com");
 
     assertEquals("updated@example.com", user.getEmail());

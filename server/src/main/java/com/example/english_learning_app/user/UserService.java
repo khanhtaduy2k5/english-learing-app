@@ -30,10 +30,10 @@ public class UserService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
   }
 
-  public User create(String name, String email) {
+  public User create(String name, String email, String password) {
     ensureEmailAvailable(email, null);
 
-    var user = new User(normalizeName(name), normalizeEmail(email));
+    var user = new User(normalizeName(name), normalizeEmail(email), password);
     try {
       return userRepository.save(user);
     } catch (DataIntegrityViolationException ex) {
