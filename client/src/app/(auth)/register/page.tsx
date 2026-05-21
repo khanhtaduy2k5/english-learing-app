@@ -48,7 +48,16 @@ export default function RegisterPage() {
       // Instead of auto-logging in, we redirect to the login page with a query param
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
+      if (err.response?.data) {
+        // Handle Spring Boot validation errors format
+        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+          setError(err.response.data.errors.map((e: any) => e.defaultMessage || e.msg).join(", "));
+        } else {
+          setError(err.response.data.message || err.response.data.error || "Registration failed");
+        }
+      } else {
+        setError("Registration failed. Please check your connection.");
+      }
     } finally {
       setLoading(false);
     }
@@ -90,6 +99,8 @@ export default function RegisterPage() {
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
               placeholder="John Doe"
               required
+              pattern="^[a-zA-Z0-9 ]+$"
+              title="Only letters, numbers, and spaces are allowed"
             />
           </div>
 
@@ -128,6 +139,7 @@ export default function RegisterPage() {
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
               placeholder="••••••••"
               required
+              minLength={8}
             />
           </div>
 

@@ -14,6 +14,7 @@ class ApiClient {
     this.client = axios.create({
       baseURL: API_BASE_URL,
       timeout: 30000,
+      withCredentials: true,
       headers: {
         "Content-Type": "application/json",
       },
@@ -63,15 +64,18 @@ class ApiClient {
 
   // Wordle endpoints
   async startWordleGame() {
-    return this.client.post("/api/wordle/start");
+    const response = await this.client.post("/api/wordle/start");
+    return response.data;
   }
 
   async getWordleGame(id: string) {
-    return this.client.get(`/api/wordle/${id}`);
+    const response = await this.client.get(`/api/wordle/${id}`);
+    return response.data;
   }
 
   async makeWordleGuess(id: string, guess: string) {
-    return this.client.post(`/api/wordle/${id}/guess`, null, { params: { guess } });
+    const response = await this.client.post(`/api/wordle/${id}/guess`, null, { params: { guess } });
+    return response.data;
   }
 
   // Generic GET

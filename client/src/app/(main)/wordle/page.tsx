@@ -115,37 +115,48 @@ export default function WordlePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center pt-8 px-4">
-      <header className="w-full max-w-lg flex justify-between items-center pb-4 border-b border-gray-700 mb-4">
-        <h1 className="text-3xl font-bold tracking-widest uppercase">Wordle</h1>
-        <button onClick={startGame} className="text-sm px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 transition">
+    <div className="min-h-[calc(100vh-4rem)] text-white flex flex-col items-center pt-8 px-4 relative overflow-hidden">
+      {/* Background Gradients */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+      <header className="w-full max-w-lg flex justify-between items-center pb-4 border-b border-white/10 mb-8 z-10">
+        <h1 className="text-3xl font-bold tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Wordle</h1>
+        <button onClick={startGame} className="text-sm px-4 py-2 bg-white/[0.05] border border-white/10 hover:bg-white/10 hover:border-white/20 rounded-xl transition-all duration-300 font-medium active:scale-95 shadow-lg">
           New Game
         </button>
       </header>
 
-      <div className="flex-1 w-full max-w-lg flex flex-col items-center">
-        {error && <div className="text-red-400 mb-2 font-semibold h-6">{error}</div>}
-        {!error && <div className="h-6 mb-2"></div>}
+      <div className="flex-1 w-full max-w-lg flex flex-col items-center z-10">
+        <div className="h-12 w-full flex justify-center items-center mb-4">
+          {error && (
+            <div className="w-full max-w-sm px-4 py-2 bg-rose-500/20 border border-rose-500/30 rounded-xl text-center backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-300">
+              <span className="text-rose-200 font-medium text-sm">{error}</span>
+            </div>
+          )}
+        </div>
 
         {game && (
           <WordleBoard guesses={game.guesses} currentGuess={currentGuess} maxGuesses={game.maxGuesses} />
         )}
 
-        {game?.status === "WON" && (
-          <div className="mt-4 p-4 bg-green-900/50 border border-green-500 rounded-lg text-center animate-bounce">
-            <h2 className="text-2xl font-bold text-green-400">You Won!</h2>
-            <p>Congratulations, you found the word!</p>
-          </div>
-        )}
+        <div className="h-24 w-full flex items-center justify-center mt-6">
+          {game?.status === "WON" && (
+            <div className="w-full px-6 py-4 bg-gradient-to-r from-emerald-400/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl text-center backdrop-blur-xl shadow-2xl shadow-emerald-500/10 animate-bounce">
+              <h2 className="text-2xl font-bold text-emerald-300 mb-1">You Won!</h2>
+              <p className="text-emerald-100/70 text-sm">Congratulations, you found the word!</p>
+            </div>
+          )}
 
-        {game?.status === "LOST" && (
-          <div className="mt-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-center">
-            <h2 className="text-2xl font-bold text-red-400">Game Over</h2>
-            <p>The word was: <span className="font-bold">{game.targetWord}</span></p>
-          </div>
-        )}
+          {game?.status === "LOST" && (
+            <div className="w-full px-6 py-4 bg-gradient-to-r from-rose-400/20 to-pink-500/20 border border-rose-500/30 rounded-2xl text-center backdrop-blur-xl shadow-2xl shadow-rose-500/10">
+              <h2 className="text-2xl font-bold text-rose-300 mb-1">Game Over</h2>
+              <p className="text-rose-100/70 text-sm">The word was: <span className="font-bold tracking-widest">{game.targetWord}</span></p>
+            </div>
+          )}
+        </div>
 
-        <div className="mt-auto pb-8 w-full">
+        <div className="mt-auto pb-8 w-full z-20">
           <WordleKeyboard usedLetters={usedLetters} onKeyPress={handleKeyPress} />
         </div>
       </div>

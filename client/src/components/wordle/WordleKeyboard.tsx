@@ -14,10 +14,10 @@ const KEYS = [
 export default function WordleKeyboard({ usedLetters, onKeyPress }: WordleKeyboardProps) {
   const getKeyColor = (key: string) => {
     const feedback = usedLetters[key];
-    if (feedback === "CORRECT") return "bg-green-600 text-white";
-    if (feedback === "PRESENT") return "bg-yellow-600 text-white";
-    if (feedback === "ABSENT") return "bg-gray-700 text-white opacity-50";
-    return "bg-gray-400 text-black";
+    if (feedback === "CORRECT") return "bg-gradient-to-br from-emerald-400 to-teal-500 text-white border-transparent shadow-emerald-500/20 shadow-lg";
+    if (feedback === "PRESENT") return "bg-gradient-to-br from-amber-400 to-orange-500 text-white border-transparent shadow-amber-500/20 shadow-lg";
+    if (feedback === "ABSENT") return "bg-white/5 text-slate-500 border-white/5 opacity-80";
+    return "bg-white/[0.05] text-white border-white/[0.06] hover:bg-white/[0.1] hover:border-white/20";
   };
 
   return (
@@ -26,17 +26,24 @@ export default function WordleKeyboard({ usedLetters, onKeyPress }: WordleKeyboa
         <div key={i} className="flex gap-1.5 w-full justify-center">
           {row.map((key) => {
             const isAction = key === "ENTER" || key === "BACKSPACE";
-            const bgColor = isAction ? "bg-gray-300 text-black" : getKeyColor(key);
+            const baseClass = "h-14 rounded-xl font-bold transition-all duration-300 border flex items-center justify-center backdrop-blur-md active:scale-90 active:brightness-90";
+            const colorClass = isAction 
+              ? "bg-white/[0.08] text-white border-white/10 hover:bg-white/[0.15] hover:border-white/20 shadow-lg" 
+              : getKeyColor(key);
             
             return (
               <button
                 key={key}
                 onClick={() => onKeyPress(key)}
-                className={`h-14 rounded font-bold transition-colors ${bgColor} ${
-                  isAction ? "px-3 text-xs sm:text-sm flex-grow-0" : "flex-1 text-sm sm:text-base max-w-[40px]"
-                } active:scale-95`}
+                className={`${baseClass} ${colorClass} ${
+                  isAction ? "px-4 text-xs sm:text-sm flex-grow-0" : "flex-1 text-sm sm:text-base max-w-[40px] shadow-md hover:-translate-y-0.5 hover:shadow-xl"
+                }`}
               >
-                {key === "BACKSPACE" ? "⌫" : key}
+                {key === "BACKSPACE" ? (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+                  </svg>
+                ) : key}
               </button>
             );
           })}
