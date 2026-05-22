@@ -15,7 +15,6 @@ export default function WordLookup({ initialWord, onAddWord }: WordLookupProps) 
   const { entry, isLoading, error, lookup, clear } = useDictionary();
   const [query, setQuery] = useState(initialWord ?? "");
   const [activeTab, setActiveTab] = useState(0);
-  const [showCorrected, setShowCorrected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSearch = () => {
