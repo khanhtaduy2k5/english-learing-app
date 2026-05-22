@@ -60,10 +60,10 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Start Lesson", href: "/dashboard/lessons", icon: "📖", desc: "Continue learning" },
-            { label: "Practice", href: "/dashboard/practice", icon: "🎯", desc: "Test your skills" },
-            { label: "Vocabulary", href: "/dashboard/vocabulary", icon: "💬", desc: "Learn new words" },
-            { label: "Quiz", href: "/dashboard/quizzes", icon: "📝", desc: "Take a quiz" },
+            { label: "Start Lesson", href: "/lessons", icon: "📖", desc: "Continue learning" },
+            { label: "Practice", href: "/practice", icon: "🎯", desc: "Test your skills" },
+            { label: "Vocabulary", href: "/vocabulary", icon: "💬", desc: "Learn new words" },
+            { label: "Quiz", href: "/quizzes", icon: "📝", desc: "Take a quiz" },
           ].map((action) => (
             <Link
               key={action.label}

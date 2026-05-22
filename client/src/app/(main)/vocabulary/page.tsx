@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import WordLookup from "@/components/WordLookup";
+import { DictionaryEntry } from "@/types/dictionary";
 
 const sampleWords = [
   { id: 1, word: "Eloquent", phonetic: "/ˈɛl.ə.kwənt/", meaning: "Fluent or persuasive in speaking or writing", example: "She gave an eloquent speech.", category: "Adjective", mastered: true },
@@ -20,6 +22,14 @@ export default function VocabularyPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [showLookup, setShowLookup] = useState(false);
+  const [addedWords, setAddedWords] = useState<string[]>([]);
+
+  const handleAddWord = (entry: DictionaryEntry) => {
+    if (!addedWords.includes(entry.word)) {
+      setAddedWords((prev) => [...prev, entry.word]);
+    }
+  };
 
   const filtered = sampleWords.filter((w) => {
     const matchCat = filter === "All" || w.category === filter;
@@ -43,6 +53,51 @@ export default function VocabularyPage() {
 
   return (
     <div className="p-8 min-h-screen">
+      {/* Word Lookup Panel */}
+      <div className="mb-8">
+        <button
+          id="word-lookup-toggle"
+          onClick={() => setShowLookup(!showLookup)}
+          className={`flex items-center gap-3 px-5 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
+            showLookup
+              ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/10 border-indigo-500/30 text-indigo-300"
+              : "bg-white/[0.03] border-white/5 text-slate-400 hover:text-white hover:bg-white/[0.06]"
+          }`}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Look Up a Word
+          <svg
+            className={`w-4 h-4 ml-1 transition-transform duration-200 ${showLookup ? "rotate-180" : ""}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {showLookup && (
+          <div className="mt-4 p-6 rounded-2xl bg-white/[0.02] border border-indigo-500/15 shadow-xl shadow-indigo-500/5">
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-white font-semibold">Dictionary Lookup</h2>
+                <p className="text-slate-500 text-xs">Powered by Free Dictionary API</p>
+              </div>
+              {addedWords.length > 0 && (
+                <span className="ml-auto px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                  {addedWords.length} word{addedWords.length > 1 ? "s" : ""} added
+                </span>
+              )}
+            </div>
+            <WordLookup onAddWord={handleAddWord} />
+          </div>
+        )}
+      </div>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
