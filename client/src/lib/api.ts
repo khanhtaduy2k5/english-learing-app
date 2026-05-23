@@ -74,7 +74,7 @@ class ApiClient {
   }
 
   async makeWordleGuess(id: string, guess: string) {
-    const response = await this.client.post(`/api/wordle/${id}/guess`, null, { params: { guess } });
+    const response = await this.client.post(`/api/wordle/${id}/guess`, { guess });
     return response.data;
   }
 

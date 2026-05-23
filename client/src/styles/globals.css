@@ -1,35 +1,57 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* =========================================
-   CSS Custom Properties — Theme Variables
+   CSS Custom Properties — Theme Variables & Shadcn
    ========================================= */
 :root {
   color-scheme: dark;
 }
 
-/* Light theme */
-html.light {
+/* Light theme variables */
+html.light, :root {
   color-scheme: light;
   --bg-primary: #f8fafc;
   --bg-secondary: #f1f5f9;
   --bg-card: #ffffff;
   --bg-card-hover: #f8fafc;
-  --bg-sidebar: #1e293b;
+  --bg-sidebar: #0f172a;
   --border-color: rgba(0, 0, 0, 0.08);
   --border-color-strong: rgba(0, 0, 0, 0.14);
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-color: rgba(0, 0, 0, 0.06);
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.08);
+
+  /* shadcn variables for Light Mode */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-primary);
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #10b981;
+  --secondary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: var(--text-secondary);
+  --accent: #f1f5f9;
+  --accent-foreground: var(--text-primary);
+  --destructive: #ef4444;
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: #4f46e5;
+  --radius: 1rem;
 }
 
-/* Dark theme (default) */
-html.dark,
-html:not(.light) {
+/* Dark theme variables */
+html.dark, html:not(.light) {
   color-scheme: dark;
   --bg-primary: #030712;
   --bg-secondary: #0a0f1e;
@@ -42,8 +64,29 @@ html:not(.light) {
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --shadow-color: rgba(0, 0, 0, 0.4);
-  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg: rgba(255, 255, 255, 0.02);
   --glass-border: rgba(255, 255, 255, 0.06);
+
+  /* shadcn variables for Dark Mode */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-secondary);
+  --popover-foreground: var(--text-primary);
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #34d399;
+  --secondary-foreground: #030712;
+  --muted: #1e293b;
+  --muted-foreground: var(--text-secondary);
+  --accent: #1e293b;
+  --accent-foreground: var(--text-primary);
+  --destructive: #ef4444;
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: #6366f1;
+  --radius: 1rem;
 }
 
 body {
@@ -85,4 +128,52 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Light Mode Compatibility Overrides for Hardcoded Dark Theme styles
+   ========================================================================== */
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light h4.text-white,
+html.light p.text-white,
+html.light div.text-white:not(.rounded-full):not([class*="from-"]):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-gradient"]),
+html.light td.text-white,
+html.light th.text-white,
+html.light span.text-white:not(.w-12):not(.w-9):not(.w-10):not(.rounded-full):not([class*="bg-gradient"]):not([class*="from-"]) {
+  color: var(--text-primary) !important;
+}
+
+html.light .bg-white\/5,
+html.light .bg-white\/10,
+html.light .bg-white\/\[0\.01\],
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.05\],
+html.light .bg-white\/\[0\.06\],
+html.light .bg-white\/\[0\.08\] {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/20,
+html.light .border-white\/\[0\.05\],
+html.light .border-white\/\[0\.08\],
+html.light .border-white\/\[0\.1\],
+html.light .border-white\/\[0\.2\] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

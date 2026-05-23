@@ -59,8 +59,23 @@ export default function WordlePage() {
 
         setLoading(true);
         try {
-          const updatedGame = await apiClient.makeWordleGuess(game.id, currentGuess);
-          setGame(updatedGame);
+          const guessResult = await apiClient.makeWordleGuess(game.id, currentGuess);
+          
+          const isFinished = guessResult.status !== "IN_PROGRESS";
+          if (isFinished) {
+            // Fetch final game representation to retrieve targetWord (secured anti-cheat)
+            const finalGame = await apiClient.getWordleGame(game.id);
+            setGame(finalGame);
+          } else {
+            setGame((prevGame) => {
+              if (!prevGame) return null;
+              return {
+                ...prevGame,
+                guesses: [...prevGame.guesses, guessResult],
+                status: guessResult.status,
+              };
+            });
+          }
           setCurrentGuess("");
         } catch (err: any) {
           // API throws 400 if word not in dict (in a real app), or game over

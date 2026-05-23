@@ -59,7 +59,7 @@ public class WordleService {
         return new GuessResult(guess, feedback, game.getStatus());
     }
 
-    private List<LetterFeedback> generateFeedback(String target, String guess) {
+    public List<LetterFeedback> generateFeedback(String target, String guess) {
         List<LetterFeedback> feedback = new ArrayList<>(5);
         for (int i = 0; i < 5; i++) {
             feedback.add(LetterFeedback.ABSENT); // Initialize

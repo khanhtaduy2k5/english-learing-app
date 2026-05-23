@@ -1,65 +1,27 @@
-// Card component
-import clsx from "clsx";
+import * as React from "react"
+import {
+  Card as ShadcnCard,
+  CardHeader as ShadcnCardHeader,
+  CardContent as ShadcnCardContent,
+  CardFooter as ShadcnCardFooter,
+} from "@/components/ui/card"
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
+interface CardProps extends React.ComponentProps<typeof ShadcnCard> {
+  interactive?: boolean
 }
 
-export const Card: React.FC<CardProps> = ({
-  className,
-  children,
-  ...props
-}) => {
-  return (
-    <div
-      className={clsx(
-        "bg-white p-6 rounded-lg shadow hover:shadow-lg transition",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
-
-interface CardHeaderProps {
-  children: React.ReactNode;
-  className?: string;
+export const Card: React.FC<CardProps> = ({ children, interactive = true, ...props }) => {
+  return <ShadcnCard interactive={interactive} {...props}>{children}</ShadcnCard>
 }
 
-export const CardHeader: React.FC<CardHeaderProps> = ({
-  children,
-  className,
-}) => {
-  return (
-    <div className={clsx("mb-4 pb-4 border-b border-gray-200", className)}>
-      {children}
-    </div>
-  );
-};
-
-interface CardBodyProps {
-  children: React.ReactNode;
-  className?: string;
+export const CardHeader: React.FC<React.ComponentProps<typeof ShadcnCardHeader>> = ({ children, ...props }) => {
+  return <ShadcnCardHeader {...props}>{children}</ShadcnCardHeader>
 }
 
-export const CardBody: React.FC<CardBodyProps> = ({ children, className }) => {
-  return <div className={clsx("mb-4", className)}>{children}</div>;
-};
-
-interface CardFooterProps {
-  children: React.ReactNode;
-  className?: string;
+export const CardBody: React.FC<React.ComponentProps<typeof ShadcnCardContent>> = ({ children, ...props }) => {
+  return <ShadcnCardContent {...props}>{children}</ShadcnCardContent>
 }
 
-export const CardFooter: React.FC<CardFooterProps> = ({
-  children,
-  className,
-}) => {
-  return (
-    <div className={clsx("pt-4 border-t border-gray-200", className)}>
-      {children}
-    </div>
-  );
-};
+export const CardFooter: React.FC<React.ComponentProps<typeof ShadcnCardFooter>> = ({ children, ...props }) => {
+  return <ShadcnCardFooter {...props}>{children}</ShadcnCardFooter>
+}

@@ -9,9 +9,39 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#3B82F6",
-        secondary: "#10B981",
-        accent: "#F59E0B",
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "oklch(0.985 0 0)", // fallback white
+        },
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--text-secondary)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--text-primary)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--text-primary)",
+        },
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--text-primary)",
+        },
       },
     },
   },
