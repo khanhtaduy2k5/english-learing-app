@@ -78,6 +78,92 @@ class ApiClient {
     return response.data;
   }
 
+  // Levels & Units
+  async getLevels() {
+    const response = await this.client.get<any[]>("/api/levels");
+    return response.data;
+  }
+
+  async getUnits(level?: string) {
+    const response = await this.client.get<any[]>("/api/units", { params: { level } });
+    return response.data;
+  }
+
+  async getUnitDetail(id: string) {
+    const response = await this.client.get<any>(`/api/units/${id}`);
+    return response.data;
+  }
+
+  // Lessons
+  async getLessons(params?: { level?: string; unitId?: string; skill?: string }) {
+    const response = await this.client.get<any[]>("/api/lessons", { params });
+    return response.data;
+  }
+
+  async getLessonDetail(id: string) {
+    const response = await this.client.get<any>(`/api/lessons/${id}`);
+    return response.data;
+  }
+
+  async getLessonQuiz(id: string) {
+    const response = await this.client.get<any>(`/api/lessons/${id}/quiz`);
+    return response.data;
+  }
+
+  // Grammar
+  async getGrammarRules(level?: string) {
+    const response = await this.client.get<any[]>("/api/grammar", { params: { level } });
+    return response.data;
+  }
+
+  async getGrammarRule(id: string) {
+    const response = await this.client.get<any>(`/api/grammar/${id}`);
+    return response.data;
+  }
+
+  // Reading
+  async getReadingPassages(level?: string) {
+    const response = await this.client.get<any[]>("/api/reading", { params: { level } });
+    return response.data;
+  }
+
+  async getReadingPassage(id: string) {
+    const response = await this.client.get<any>(`/api/reading/${id}`);
+    return response.data;
+  }
+
+  // Exams
+  async getExams() {
+    const response = await this.client.get<any[]>("/api/exams");
+    return response.data;
+  }
+
+  async getExam(id: string) {
+    const response = await this.client.get<any>(`/api/exams/${id}`);
+    return response.data;
+  }
+
+  // User Progress
+  async getUserProgress(userId: string) {
+    const response = await this.client.get<any[]>(`/api/progress/user/${userId}`);
+    return response.data;
+  }
+
+  async getLessonProgress(userId: string, lessonId: string) {
+    const response = await this.client.get<any>(`/api/progress/user/${userId}/lesson/${lessonId}`);
+    return response.data;
+  }
+
+  async updateProgress(userId: string, lessonId: string, status: string, quizScore?: number) {
+    const response = await this.client.post<any>("/api/progress", {
+      userId,
+      lessonId,
+      status,
+      quizScore
+    });
+    return response.data;
+  }
+
   // Generic GET
   async get<T>(url: string) {
     const response = await this.client.get<T>(url);

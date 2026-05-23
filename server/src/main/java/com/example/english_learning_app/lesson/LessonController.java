@@ -1,13 +1,9 @@
 package com.example.english_learning_app.lesson;
 
 import java.util.List;
-
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,63 +18,85 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @SecurityRequirement(name = "bearerAuth")
 public class LessonController {
 
-  private final LessonService lessonService;
+    private final LessonService lessonService;
 
-  public LessonController(LessonService lessonService) {
-    this.lessonService = lessonService;
-  }
+    public LessonController(LessonService lessonService) {
+        this.lessonService = lessonService;
+    }
 
-  @GetMapping
-  @Operation(summary = "List lessons", description = "Return the available lesson summaries for the dashboard")
-  @ApiResponse(responseCode = "200", description = "Lesson list returned")
-  public List<LessonSummaryDto> getLessons() {
-    return lessonService.getLessons();
-  }
+    @GetMapping
+    @Operation(summary = "List lessons", description = "Return the available lesson summaries with optional level, unitId, or skill filter")
+    @ApiResponse(responseCode = "200", description = "Lesson list returned")
+    public List<LessonSummaryDto> getLessons(
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String unitId,
+            @RequestParam(required = false) String skill) {
+        if (level != null && !level.isBlank()) {
+            return lessonService.getLessonsByLevel(level);
+        } else if (unitId != null && !unitId.isBlank()) {
+            return lessonService.getLessonsByUnit(unitId);
+        } else if (skill != null && !skill.isBlank()) {
+            return lessonService.getLessonsBySkill(skill);
+        }
+        return lessonService.getLessons();
+    }
 
-  @GetMapping("/{lessonId}")
-  @Operation(summary = "Get lesson", description = "Return full lesson details for a lesson id")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Lesson found", content = @Content(schema = @Schema(implementation = LessonDto.class))),
-      @ApiResponse(responseCode = "404", description = "Lesson not found")
-  })
-  public ResponseEntity<LessonDto> getLesson(@PathVariable String lessonId) {
-    return lessonService.getLesson(lessonId)
-      .map(ResponseEntity::ok)
-      .orElseGet(() -> ResponseEntity.notFound().build());
-  }
+    @GetMapping("/{lessonId}")
+    @Operation(summary = "Get lesson", description = "Return full lesson details for a lesson id")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lesson found", content = @Content(schema = @Schema(implementation = LessonDto.class))),
+        @ApiResponse(responseCode = "404", description = "Lesson not found")
+    })
+    public ResponseEntity<LessonDto> getLesson(@PathVariable String lessonId) {
+        return lessonService.getLesson(lessonId)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
-  @GetMapping("/{lessonId}/quiz")
-  @Operation(summary = "Get lesson quiz", description = "Return the quiz questions for a specific lesson")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Quiz found", content = @Content(schema = @Schema(implementation = QuizResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "Quiz not found")
-  })
-  public ResponseEntity<QuizResponseDto> getQuiz(@PathVariable String lessonId) {
-    return lessonService.getQuiz(lessonId)
-      .map(ResponseEntity::ok)
-      .orElseGet(() -> ResponseEntity.notFound().build());
-  }
+    @GetMapping("/{lessonId}/quiz")
+    @Operation(summary = "Get lesson quiz", description = "Return the quiz questions for a specific lesson")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Quiz found", content = @Content(schema = @Schema(implementation = QuizResponseDto.class))),
+        @ApiResponse(responseCode = "404", description = "Quiz not found")
+    })
+    public ResponseEntity<QuizResponseDto> getQuiz(@PathVariable String lessonId) {
+        return lessonService.getQuiz(lessonId)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     public record LessonSummaryDto(
-      @Schema(description = "Lesson id", example = "1") String id,
-      @Schema(description = "Lesson title", example = "Greetings and Introductions") String title,
-      @Schema(description = "Short lesson summary", example = "Learn basic greetings and self-introductions.") String description,
-      @Schema(description = "Lesson level", example = "Beginner") String level) {}
+        @Schema(description = "Lesson id", example = "1") String id,
+        @Schema(description = "Unit id", example = "unit-1") String unitId,
+        @Schema(description = "Lesson level", example = "A1") String level,
+        @Schema(description = "Lesson skill", example = "speaking") String skill,
+        @Schema(description = "Lesson title", example = "Greetings and Introductions") String title,
+        @Schema(description = "Short lesson summary", example = "Learn basic greetings.") String description,
+        @Schema(description = "Estimated duration in minutes", example = "15") Integer duration,
+        @Schema(description = "XP awarded for completing", example = "50") Integer xp
+    ) {}
 
     public record LessonDto(
-      @Schema(description = "Lesson id", example = "1") String id,
-      @Schema(description = "Lesson title", example = "Greetings and Introductions") String title,
-      @Schema(description = "Short lesson summary", example = "Learn basic greetings and self-introductions.") String description,
-      @Schema(description = "Lesson level", example = "Beginner") String level,
-      @Schema(description = "Lesson content", example = "Simple dialogues for meeting new people.") String content) {}
+        @Schema(description = "Lesson id", example = "1") String id,
+        @Schema(description = "Unit id", example = "unit-1") String unitId,
+        @Schema(description = "Lesson level", example = "A1") String level,
+        @Schema(description = "Lesson skill", example = "speaking") String skill,
+        @Schema(description = "Lesson title", example = "Greetings and Introductions") String title,
+        @Schema(description = "Short lesson summary") String description,
+        @Schema(description = "Estimated duration in minutes") Integer duration,
+        @Schema(description = "XP awarded for completing") Integer xp,
+        @Schema(description = "Vocabulary items list") List<Map<String, Object>> vocab,
+        @Schema(description = "Grammar rule explanation") String grammarRule,
+        @Schema(description = "Grammar examples list") List<Map<String, Object>> grammarExamples,
+        @Schema(description = "Reading passage text if applicable") String passage,
+        @Schema(description = "Listening audio script if applicable") String script,
+        @Schema(description = "Interactive speaking/writing prompt") String prompt,
+        @Schema(description = "Tips for study") List<String> tips,
+        @Schema(description = "Interactive practice questions list") List<Map<String, Object>> questions
+    ) {}
 
     public record QuizResponseDto(
-      @Schema(description = "Lesson id", example = "1") String lessonId,
-      @Schema(description = "Quiz questions") List<QuizQuestionDto> questions) {}
-
-    public record QuizQuestionDto(
-      @Schema(description = "Question id", example = "1-q1") String id,
-      @Schema(description = "Quiz question", example = "Which phrase is a greeting?") String question,
-      @Schema(description = "Answer options") List<String> options,
-      @Schema(description = "Correct answer", example = "Good morning") String answer) {}
+        @Schema(description = "Lesson id", example = "1") String lessonId,
+        @Schema(description = "Practice questions") List<Map<String, Object>> questions
+    ) {}
 }

@@ -1,58 +1,84 @@
 package com.example.english_learning_app.lesson;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
-
 @Service
+@Transactional(readOnly = true)
 public class LessonService {
 
-  private final LessonRepository lessonRepository;
+    private final LessonRepository lessonRepository;
 
-  public LessonService(LessonRepository lessonRepository) {
-    this.lessonRepository = lessonRepository;
-  }
+    public LessonService(LessonRepository lessonRepository) {
+        this.lessonRepository = lessonRepository;
+    }
 
-  public List<LessonController.LessonSummaryDto> getLessons() {
-    return lessonRepository.findAll().stream()
-        .map(lesson -> new LessonController.LessonSummaryDto(
-            lesson.id(),
-            lesson.title(),
-            lesson.description(),
-            lesson.level()))
-        .toList();
-  }
+    public List<LessonController.LessonSummaryDto> getLessons() {
+        return lessonRepository.findAll().stream()
+            .map(this::toSummaryDto)
+            .toList();
+    }
 
-  public Optional<LessonController.LessonDto> getLesson(String lessonId) {
-    return lessonRepository.findById(lessonId)
-        .map(lesson -> new LessonController.LessonDto(
-            lesson.id(),
-            lesson.title(),
-            lesson.description(),
-            lesson.level(),
-            lesson.content()));
-  }
+    public List<LessonController.LessonSummaryDto> getLessonsByLevel(String level) {
+        return lessonRepository.findByLevel(level).stream()
+            .map(this::toSummaryDto)
+            .toList();
+    }
 
-  public Optional<LessonController.QuizResponseDto> getQuiz(String lessonId) {
-    return lessonRepository.findById(lessonId)
-        .map(lesson -> new LessonController.QuizResponseDto(lesson.id(), sampleQuizFor(lessonId)));
-  }
+    public List<LessonController.LessonSummaryDto> getLessonsByUnit(String unitId) {
+        return lessonRepository.findByUnitId(unitId).stream()
+            .map(this::toSummaryDto)
+            .toList();
+    }
 
-  private List<LessonController.QuizQuestionDto> sampleQuizFor(String lessonId) {
-    return List.of(
-        new LessonController.QuizQuestionDto(
-            lessonId + "-q1",
-            "Which phrase is a greeting?",
-            List.of("Good morning", "Turn left", "I am hungry", "See you later"),
-            "Good morning"
-        ),
-        new LessonController.QuizQuestionDto(
-            lessonId + "-q2",
-            "What does 'introduce yourself' mean?",
-            List.of("Say your name", "Ask for directions", "Order food", "Book a hotel"),
-            "Say your name"
-        )
-    );
-  }
+    public List<LessonController.LessonSummaryDto> getLessonsBySkill(String skill) {
+        return lessonRepository.findBySkill(skill).stream()
+            .map(this::toSummaryDto)
+            .toList();
+    }
+
+    public Optional<LessonController.LessonDto> getLesson(String lessonId) {
+        return lessonRepository.findById(lessonId)
+            .map(lesson -> new LessonController.LessonDto(
+                lesson.getId(),
+                lesson.getUnitId(),
+                lesson.getLevel(),
+                lesson.getSkill(),
+                lesson.getTitle(),
+                lesson.getDescription(),
+                lesson.getDuration(),
+                lesson.getXp(),
+                lesson.getVocab(),
+                lesson.getGrammarRule(),
+                lesson.getGrammarExamples(),
+                lesson.getPassage(),
+                lesson.getScript(),
+                lesson.getPrompt(),
+                lesson.getTips(),
+                lesson.getQuestions()
+            ));
+    }
+
+    public Optional<LessonController.QuizResponseDto> getQuiz(String lessonId) {
+        return lessonRepository.findById(lessonId)
+            .map(lesson -> new LessonController.QuizResponseDto(
+                lesson.getId(),
+                lesson.getQuestions()
+            ));
+    }
+
+    private LessonController.LessonSummaryDto toSummaryDto(Lesson lesson) {
+        return new LessonController.LessonSummaryDto(
+            lesson.getId(),
+            lesson.getUnitId(),
+            lesson.getLevel(),
+            lesson.getSkill(),
+            lesson.getTitle(),
+            lesson.getDescription(),
+            lesson.getDuration(),
+            lesson.getXp()
+        );
+    }
 }
