@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "English Learning App",
-  description: "Learn English with interactive lessons and quizzes",
+  title: "EngSphere - Next-Gen Language Learning Platform",
+  description: "Master English with interactive lessons, immersive quizzes, and personalized learning pathways.",
 };
 
 export default function RootLayout({

@@ -20,7 +20,7 @@ export default function DashboardLayout({
     logout();
     localStorage.removeItem("token");
     document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
-    router.push("/");
+    window.location.href = "/login";
   };
 
   if (!isReady) {
@@ -54,7 +54,7 @@ export default function DashboardLayout({
 
       {/* Main content area - shifts right based on sidebar width */}
       <main
-        className={`transition-all duration-300 min-h-screen ${
+        className={`transition-[margin] duration-300 ease-in-out min-h-screen ${
           isCollapsed ? "ml-[72px]" : "ml-[260px]"
         }`}
       >

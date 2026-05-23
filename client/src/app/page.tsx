@@ -57,45 +57,59 @@ export default function Home() {
                   : "text-slate-950"
               }`}
             >
-              Lingua
+              EngSphere
             </span>
           </Link>
+
+          {/* Navigation Links - Hidden on Mobile */}
+          <div className="hidden md:flex items-center gap-8">
+            <button
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              className={`text-sm font-medium transition-colors duration-200 ${
+                isDark ? "text-slate-300 hover:text-indigo-400" : "text-slate-600 hover:text-indigo-600"
+              }`}
+            >
+              Features
+            </button>
+            <button
+              onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+              className={`text-sm font-medium transition-colors duration-200 ${
+                isDark ? "text-slate-300 hover:text-indigo-400" : "text-slate-600 hover:text-indigo-600"
+              }`}
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' })}
+              className={`text-sm font-medium transition-colors duration-200 ${
+                isDark ? "text-slate-300 hover:text-indigo-400" : "text-slate-600 hover:text-indigo-600"
+              }`}
+            >
+              Reviews
+            </button>
+          </div>
+
           <div className="flex gap-4 items-center">
             <ThemeToggle />
-            {isAuthenticated ? (
-              <>
-                <span className={`text-sm hidden sm:block ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                  Welcome back, <span className={isDark ? "text-white font-medium" : "text-slate-950 font-medium"}>{user?.name}</span>
-                </span>
-                <Link
-                  href="/dashboard"
-                  className={`px-5 py-2.5 border rounded-full text-sm font-medium transition-all duration-300 backdrop-blur-sm ${
-                    isDark
-                      ? "bg-white/10 hover:bg-white/20 text-white border-white/10"
-                      : "bg-slate-950 hover:bg-slate-800 text-white border-slate-950"
-                  }`}
-                >
-                  Dashboard
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className={`px-5 py-2.5 transition-colors text-sm font-medium ${
-                    isDark ? "text-slate-300 hover:text-white" : "text-slate-700 hover:text-slate-950"
-                  }`}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
-                >
-                  Register
-                </Link>
-              </>
+            {isAuthenticated && (
+              <span className={`text-sm hidden lg:block ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                Hi, <span className={isDark ? "text-white font-medium" : "text-slate-950 font-medium"}>{user?.name}</span>
+              </span>
             )}
+            <Link
+              href="/login"
+              className={`px-5 py-2.5 transition-colors text-sm font-medium ${
+                isDark ? "text-slate-300 hover:text-white" : "text-slate-700 hover:text-slate-950"
+              }`}
+            >
+              Login
+            </Link>
+            <Link
+              href="/register"
+              className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
+            >
+              Register
+            </Link>
           </div>
         </div>
       </nav>
@@ -154,7 +168,7 @@ export default function Home() {
       <section id="features" className={`py-24 relative border-t ${isDark ? "border-white/5 bg-[#030712]/50" : "border-slate-200 bg-white"}`}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why choose Lingua?</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why choose EngSphere?</h2>
             <p className={isDark ? "text-slate-400" : "text-slate-600"}>Experience language learning redesigned for the modern era.</p>
           </div>
 
@@ -214,7 +228,7 @@ export default function Home() {
       <section id="how-it-works" className={`py-24 relative ${isDark ? "bg-[#030712]" : "bg-slate-50"}`}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">How Lingua Works</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">How EngSphere Works</h2>
             <p className={isDark ? "text-slate-400" : "text-slate-600"}>Three simple steps to fluency.</p>
           </div>
           
@@ -249,12 +263,12 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className={`py-24 relative border-t overflow-hidden ${isDark ? "border-white/5 bg-[#030712]/50" : "border-slate-200 bg-white"}`}>
+      <section id="testimonials" className={`py-24 relative border-t overflow-hidden ${isDark ? "border-white/5 bg-[#030712]/50" : "border-slate-200 bg-white"}`}>
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">Loved by Learners</h2>
-            <p className={isDark ? "text-slate-400" : "text-slate-600"}>Join thousands of students who have mastered English with Lingua.</p>
+            <p className={isDark ? "text-slate-400" : "text-slate-600"}>Join thousands of students who have mastered English with EngSphere.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -272,7 +286,7 @@ export default function Home() {
                     </svg>
                   ))}
                 </div>
-                <p className={`mb-8 leading-relaxed ${isDark ? "text-slate-300" : "text-slate-700"}`}>&quot;{i === 1 ? 'This app completely changed the way I learn. The AI pronunciation feedback is incredible and the lessons are engaging.' : i === 2 ? 'I used to struggle with speaking, but Lingua gave me the confidence to finally converse fluently. Highly recommended!' : 'The structured curriculum makes learning English feel effortless. I advanced from beginner to intermediate in just a few months.'}&quot;</p>
+                <p className={`mb-8 leading-relaxed ${isDark ? "text-slate-300" : "text-slate-700"}`}>&quot;{i === 1 ? 'This app completely changed the way I learn. The AI pronunciation feedback is incredible and the lessons are engaging.' : i === 2 ? 'I used to struggle with speaking, but EngSphere gave me the confidence to finally converse fluently. Highly recommended!' : 'The structured curriculum makes learning English feel effortless. I advanced from beginner to intermediate in just a few months.'}&quot;</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     {['S', 'M', 'A'][i-1]}
@@ -313,14 +327,14 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <span className={isDark ? "text-lg font-bold text-white" : "text-lg font-bold text-slate-950"}>Lingua</span>
+            <span className={isDark ? "text-lg font-bold text-white" : "text-lg font-bold text-slate-950"}>EngSphere</span>
           </div>
           <div className={`flex gap-6 text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
             <Link href="#" className={isDark ? "hover:text-white transition-colors" : "hover:text-slate-950 transition-colors"}>Privacy Policy</Link>
             <Link href="#" className={isDark ? "hover:text-white transition-colors" : "hover:text-slate-950 transition-colors"}>Terms of Service</Link>
             <Link href="#" className={isDark ? "hover:text-white transition-colors" : "hover:text-slate-950 transition-colors"}>Contact Us</Link>
           </div>
-          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} Lingua. All rights reserved.</p>
+          <p className="text-slate-500 text-sm">© {new Date().getFullYear()} EngSphere. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -128,7 +128,7 @@ export default function Sidebar({ userName, userEmail, onLogout, isCollapsed, on
             </svg>
           </div>
           {!isCollapsed && (
-            <span className="text-foreground font-bold text-lg tracking-tight">Lingua</span>
+            <span className="text-foreground font-bold text-lg tracking-tight">EngSphere</span>
           )}
         </Link>
         <button
