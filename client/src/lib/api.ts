@@ -3,6 +3,7 @@ import axios, {
   AxiosError,
   InternalAxiosRequestConfig,
 } from "axios";
+import { useAuthStore } from "@/store/authStore";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -39,8 +40,7 @@ class ApiClient {
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           if (typeof window !== "undefined") {
-            localStorage.removeItem("token");
-            document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
+            useAuthStore.getState().logout();
             window.location.href = "/login";
           }
         }

@@ -4,6 +4,8 @@ import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -19,6 +21,7 @@ export default function RegisterPage() {
   const passwordId = useId();
   const confirmPasswordId = useId();
   const router = useRouter();
+  const { authenticate } = useAuthStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -39,14 +42,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await apiClient.register({
+      const response = await apiClient.register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
+      const { token, user } = response.data;
 
-      // Instead of auto-logging in, we redirect to the login page with a query param
-      router.push("/login?registered=true");
+      authenticate(user, token);
+      router.push("/dashboard");
     } catch (err: any) {
       if (err.response?.data) {
         // Handle Spring Boot validation errors format
@@ -67,6 +71,10 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[#030712] text-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className="absolute right-6 top-6 z-20">
+        <ThemeToggle />
+      </div>
 
       <div className="bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md backdrop-blur-xl relative z-10">
         <div className="flex justify-center mb-6">
