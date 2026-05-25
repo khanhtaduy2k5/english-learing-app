@@ -1,15 +1,19 @@
 package com.example.english_learning_app.lesson;
 
+import com.example.english_learning_app.lesson.details.ReadingDetails;
+import com.example.english_learning_app.lesson.details.ListeningDetails;
+import com.example.english_learning_app.lesson.details.GrammarDetails;
+import com.example.english_learning_app.lesson.details.WritingSpeakingDetails;
+import com.example.english_learning_app.lesson.vocab.LessonVocabulary;
+import com.example.english_learning_app.lesson.quiz.Question;
+import com.example.english_learning_app.lesson.tip.LessonTip;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Table(name = "lessons")
@@ -42,33 +46,33 @@ public class Lesson {
 
     private Integer xp;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false)
-    private List<Map<String, Object>> vocab;
+    // --- CÁC QUAN HỆ ONE-TO-ONE CHI TIẾT THEO SKILL ---
 
-    @Column(name = "grammar_rule", columnDefinition = "TEXT")
-    private String grammarRule;
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ReadingDetails readingDetails;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "grammar_examples", nullable = false)
-    private List<Map<String, Object>> grammarExamples;
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ListeningDetails listeningDetails;
 
-    @Column(columnDefinition = "TEXT")
-    private String passage;
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private GrammarDetails grammarDetails;
 
-    @Column(columnDefinition = "TEXT")
-    private String script;
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private WritingSpeakingDetails writingSpeakingDetails;
 
-    @Column(columnDefinition = "TEXT")
-    private String prompt;
+    // --- CÁC QUAN HỆ ONE-TO-MANY ĐƯỢC CHUẨN HÓA ---
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false)
-    private List<String> tips;
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("orderIndex ASC")
+    private List<LessonVocabulary> lessonVocabularies;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false)
-    private List<Map<String, Object>> questions;
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("orderIndex ASC")
+    private List<Question> questions;
+
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("orderIndex ASC")
+    private List<LessonTip> tips;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

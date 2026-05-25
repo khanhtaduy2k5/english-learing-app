@@ -30,15 +30,17 @@ public class LessonController {
     public List<LessonSummaryDto> getLessons(
             @RequestParam(required = false) String level,
             @RequestParam(required = false) String unitId,
-            @RequestParam(required = false) String skill) {
+            @RequestParam(required = false) String skill,
+            @RequestHeader(name = "Accept-Language", required = false) String acceptLanguage) {
+        String locale = parseLocale(acceptLanguage);
         if (level != null && !level.isBlank()) {
-            return lessonService.getLessonsByLevel(level);
+            return lessonService.getLessonsByLevel(level, locale);
         } else if (unitId != null && !unitId.isBlank()) {
-            return lessonService.getLessonsByUnit(unitId);
+            return lessonService.getLessonsByUnit(unitId, locale);
         } else if (skill != null && !skill.isBlank()) {
-            return lessonService.getLessonsBySkill(skill);
+            return lessonService.getLessonsBySkill(skill, locale);
         }
-        return lessonService.getLessons();
+        return lessonService.getLessons(locale);
     }
 
     @GetMapping("/{lessonId}")
@@ -47,8 +49,11 @@ public class LessonController {
         @ApiResponse(responseCode = "200", description = "Lesson found", content = @Content(schema = @Schema(implementation = LessonDto.class))),
         @ApiResponse(responseCode = "404", description = "Lesson not found")
     })
-    public ResponseEntity<LessonDto> getLesson(@PathVariable String lessonId) {
-        return lessonService.getLesson(lessonId)
+    public ResponseEntity<LessonDto> getLesson(
+            @PathVariable String lessonId,
+            @RequestHeader(name = "Accept-Language", required = false) String acceptLanguage) {
+        String locale = parseLocale(acceptLanguage);
+        return lessonService.getLesson(lessonId, locale)
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -59,10 +64,24 @@ public class LessonController {
         @ApiResponse(responseCode = "200", description = "Quiz found", content = @Content(schema = @Schema(implementation = QuizResponseDto.class))),
         @ApiResponse(responseCode = "404", description = "Quiz not found")
     })
-    public ResponseEntity<QuizResponseDto> getQuiz(@PathVariable String lessonId) {
-        return lessonService.getQuiz(lessonId)
+    public ResponseEntity<QuizResponseDto> getQuiz(
+            @PathVariable String lessonId,
+            @RequestHeader(name = "Accept-Language", required = false) String acceptLanguage) {
+        String locale = parseLocale(acceptLanguage);
+        return lessonService.getQuiz(lessonId, locale)
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private String parseLocale(String acceptLanguage) {
+        if (acceptLanguage == null || acceptLanguage.isBlank()) {
+            return "en";
+        }
+        String firstLang = acceptLanguage.split(",")[0].trim();
+        if (firstLang.contains("-")) {
+            return firstLang.split("-")[0].toLowerCase();
+        }
+        return firstLang.toLowerCase();
     }
 
     public record LessonSummaryDto(
