@@ -2,3 +2,13 @@
 .idea
 GEMINI.md
 ERRORS.md
+
+# Environment files (NEVER commit secrets)
+.env
+.env.*
+!.env.example
+!.env.production.example
+!.env.version
+
+# Deploy secrets
+deploy/.env.production
