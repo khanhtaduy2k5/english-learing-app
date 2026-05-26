@@ -6,6 +6,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api";
 import { Card, CardBody, CardFooter } from "@/components/Card";
 import { Button } from "@/components/Button";
+import {
+  BookOpenText,
+  Volume2,
+  BookOpen,
+  MessageSquare,
+  Clock,
+  Sparkles,
+  ChevronRight
+} from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -111,38 +120,76 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {lessons.map((lesson: any) => (
-              <Card
-                key={lesson.id}
-                interactive={true}
-                className="hover:border-indigo-500/20 shadow-md transition-all duration-300 group flex flex-col justify-between"
-              >
-                <CardBody className="p-1 mb-0 flex-1">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-foreground font-extrabold text-base group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+            {lessons.map((lesson: any) => {
+              // Get skill config
+              const getSkillConfig = (skill: string) => {
+                const configs: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
+                  reading: { label: "Đọc", icon: BookOpenText, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+                  listening: { label: "Nghe", icon: Volume2, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+                  grammar: { label: "Ngữ pháp", icon: BookOpen, color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+                  speaking: { label: "Nói", icon: Volume2, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
+                  writing: { label: "Viết", icon: MessageSquare, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" }
+                };
+                const sLower = (skill || "").toLowerCase();
+                return configs[sLower] || { label: skill, icon: BookOpen, color: "text-slate-300", bg: "bg-white/5", border: "border-white/10" };
+              };
+
+              const skillConfig = getSkillConfig(lesson.skill);
+              const SkillIcon = skillConfig.icon;
+
+              return (
+                <Card
+                  key={lesson.id}
+                  interactive={true}
+                  className="hover:border-indigo-500/20 shadow-md transition-all duration-300 group flex flex-col justify-between"
+                >
+                  <CardBody className="p-1 mb-0 flex-1">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`p-1 rounded ${skillConfig.bg} ${skillConfig.color} border ${skillConfig.border}`}>
+                          <SkillIcon className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">{skillConfig.label}</span>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/10">
+                        {lesson.level}
+                      </span>
+                    </div>
+
+                    <h3 className="text-foreground font-extrabold text-base group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 leading-snug mb-2">
                       {lesson.title}
                     </h3>
-                  </div>
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/10 dark:border-indigo-500/20 mb-3">
-                    {lesson.level}
-                  </span>
-                  <p className="text-muted-foreground text-xs md:text-sm line-clamp-2 leading-relaxed">
-                    {lesson.description}
-                  </p>
-                </CardBody>
-                
-                <CardFooter className="bg-transparent border-none p-1 pt-4 flex justify-start items-center">
-                  <Link href={`/lessons/${lesson.id}`} className="block w-full">
-                    <Button variant="primary" className="w-full flex items-center gap-2 justify-center">
-                      Start Lesson
-                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
+                    
+                    <p className="text-muted-foreground text-xs md:text-sm line-clamp-2 leading-relaxed">
+                      {lesson.description}
+                    </p>
+
+                    {/* Metadata duration/xp */}
+                    <div className="flex items-center gap-3 mt-4 pt-3 border-t border-white/5 text-[10px] text-slate-500">
+                      {lesson.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-600" /> {lesson.duration} phút
+                        </span>
+                      )}
+                      {lesson.xp && (
+                        <span className="flex items-center gap-1 text-purple-400/90 font-semibold">
+                          <Sparkles className="w-3 h-3" /> +{lesson.xp} XP
+                        </span>
+                      )}
+                    </div>
+                  </CardBody>
+                  
+                  <CardFooter className="bg-transparent border-none p-1 pt-4 flex justify-start items-center">
+                    <Link href={`/lessons/${lesson.id}`} className="block w-full">
+                      <Button variant="primary" className="w-full flex items-center gap-2 justify-center">
+                        Bắt đầu
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

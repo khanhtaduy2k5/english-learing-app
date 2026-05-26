@@ -41,6 +41,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
   }, [isAuthenticated, params.id]);
 
   const handleAnswer = (option: string) => {
+    if (answers[currentQuestion] !== undefined) return;
     setAnswers((prev) => ({ ...prev, [currentQuestion]: option }));
   };
 
@@ -129,6 +130,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
   }
 
   const question = questions[currentQuestion];
+  const hasSelectedAnswer = answers[currentQuestion] !== undefined;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between">
@@ -169,24 +171,44 @@ export default function QuizPage({ params }: { params: { id: string } }) {
           </h2>
 
           {/* Options */}
-          <div className="space-y-3 mb-8">
+          <div className="space-y-3 mb-6">
             {(question.options as string[]).map((option: string) => {
               const isSelected = answers[currentQuestion] === option;
+              const correctAns = question.answer;
+              const isCorrectOption = option === correctAns;
+
+              let buttonStyle = "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10";
+              if (hasSelectedAnswer) {
+                if (isCorrectOption) {
+                  buttonStyle = "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shadow-md shadow-emerald-500/5";
+                } else if (isSelected) {
+                  buttonStyle = "bg-rose-500/15 border-rose-500/30 text-rose-400";
+                } else {
+                  buttonStyle = "bg-white/[0.02] border-white/5 text-slate-600 opacity-60 pointer-events-none";
+                }
+              } else if (isSelected) {
+                buttonStyle = "bg-indigo-500/10 border-indigo-500/30 text-indigo-300";
+              }
+
               return (
                 <button
                   key={option}
                   onClick={() => handleAnswer(option)}
-                  className={`w-full p-4 border rounded-xl text-left text-sm transition-all duration-200 flex items-center justify-between ${
-                    isSelected
-                      ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300 shadow-md"
-                      : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
-                  }`}
+                  disabled={hasSelectedAnswer}
+                  className={`w-full p-4 border rounded-xl text-left text-sm transition-all duration-200 flex items-center justify-between ${buttonStyle}`}
                 >
                   <span>{option}</span>
-                  {isSelected && (
-                    <div className="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                  {hasSelectedAnswer && isCorrectOption && (
+                    <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
                       <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                  {hasSelectedAnswer && isSelected && !isCorrectOption && (
+                    <div className="w-4 h-4 rounded-full bg-rose-500 flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </div>
                   )}
@@ -194,6 +216,19 @@ export default function QuizPage({ params }: { params: { id: string } }) {
               );
             })}
           </div>
+
+          {/* Explanation Panel */}
+          {hasSelectedAnswer && (
+            <div className="p-4 rounded-xl bg-indigo-500/[0.04] border border-indigo-500/15 text-slate-300 text-xs leading-relaxed mb-8 animate-fadeIn">
+              <div className="flex items-center gap-1.5 text-indigo-400 font-bold mb-1.5 uppercase tracking-wider text-[10px]">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Explanation:
+              </div>
+              <p>{question.explanation || "No detailed explanation available for this question."}</p>
+            </div>
+          )}
 
           {/* Navigation */}
           <div className="flex gap-4 justify-between pt-4 border-t border-white/5">
@@ -207,7 +242,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
 
             {currentQuestion === questions.length - 1 ? (
               <button
-                disabled={answers[currentQuestion] === undefined}
+                disabled={!hasSelectedAnswer}
                 onClick={handleSubmit}
                 className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 disabled:pointer-events-none text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-500/10 transition-all"
               >
@@ -215,7 +250,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
               </button>
             ) : (
               <button
-                disabled={answers[currentQuestion] === undefined}
+                disabled={!hasSelectedAnswer}
                 onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}
                 className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:pointer-events-none text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-500/10 transition-all"
               >

@@ -4,6 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { useAuthStore } from "@/store/authStore";
+import { Lesson, LessonSummary } from "@/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -29,6 +30,12 @@ class ApiClient {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // Add Accept-Language header for i18n
+        const language =
+          typeof window !== "undefined" ? localStorage.getItem("language") || "vi" : "vi";
+        config.headers["Accept-Language"] = language;
+        
         return config;
       },
       (error) => Promise.reject(error),
@@ -48,6 +55,7 @@ class ApiClient {
       },
     );
   }
+
 
   // Auth endpoints
   async login(email: string, password: string) {
@@ -96,14 +104,15 @@ class ApiClient {
 
   // Lessons
   async getLessons(params?: { level?: string; unitId?: string; skill?: string }) {
-    const response = await this.client.get<any[]>("/api/lessons", { params });
+    const response = await this.client.get<LessonSummary[]>("/api/lessons", { params });
     return response.data;
   }
 
   async getLessonDetail(id: string) {
-    const response = await this.client.get<any>(`/api/lessons/${id}`);
+    const response = await this.client.get<Lesson>(`/api/lessons/${id}`);
     return response.data;
   }
+
 
   async getLessonQuiz(id: string) {
     const response = await this.client.get<any>(`/api/lessons/${id}/quiz`);

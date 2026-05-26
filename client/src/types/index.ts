@@ -38,7 +38,7 @@ export interface VocabularyItem {
   exampleMeaning?: string;
 }
 
-export interface Lesson {
+export interface LessonSummary {
   id: string;
   unitId?: string;
   level: string;
@@ -47,16 +47,33 @@ export interface Lesson {
   description?: string;
   duration?: number;
   xp?: number;
-  vocab: VocabularyItem[];
+}
+
+export interface GrammarExample {
+  english: string;
+  vietnamese: string;
+}
+
+export interface QuizQuestion {
+  question?: string;
+  text?: string;
+  options: string[];
+  answer: string;
+  explanation?: string;
+}
+
+export interface Lesson extends LessonSummary {
+  vocab?: VocabularyItem[];
   grammarRule?: string;
-  grammarExamples?: Array<Record<string, any>>;
+  grammarExamples?: GrammarExample[];
   passage?: string;
   script?: string;
   prompt?: string;
   tips?: string[];
-  questions?: Array<Record<string, any>>;
-  createdAt: string;
+  questions?: QuizQuestion[];
+  createdAt?: string;
 }
+
 
 export interface Level {
   level: string;
