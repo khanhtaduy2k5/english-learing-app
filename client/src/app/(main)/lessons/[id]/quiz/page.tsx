@@ -78,7 +78,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -86,13 +86,13 @@ export default function QuizPage({ params }: { params: { id: string } }) {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white p-6 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-transparent text-slate-800 dark:text-white p-6 text-center">
         <div>
           <h2 className="text-xl font-bold mb-2">No Quiz Available</h2>
-          <p className="text-slate-400 text-sm mb-6">This lesson does not have practice questions yet.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">This lesson does not have practice questions yet.</p>
           <button
             onClick={() => router.back()}
-            className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-sm font-semibold"
+            className="px-6 py-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-sm font-semibold transition-all"
           >
             Go Back
           </button>
@@ -103,19 +103,19 @@ export default function QuizPage({ params }: { params: { id: string } }) {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
-        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/5 p-8 rounded-2xl text-center max-w-md w-full shadow-2xl">
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-6 text-slate-800 dark:text-white">
+        <div className="bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/5 p-8 rounded-2xl text-center max-w-md w-full shadow-2xl">
           <div className="w-16 h-16 rounded-full bg-emerald-500/20 mx-auto flex items-center justify-center mb-6">
-            <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
             Quiz Complete!
           </h1>
-          <p className="text-slate-400 text-sm mb-6">Your answers have been checked and recorded in your progress.</p>
-          <div className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-6">{score}%</div>
-          <p className="text-slate-300 text-sm mb-8">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Your answers have been checked and recorded in your progress.</p>
+          <div className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 mb-6">{score}%</div>
+          <p className="text-slate-700 dark:text-slate-300 text-sm mb-8">
             You scored {Math.round((score / 100) * questions.length)} out of {questions.length} correct.
           </p>
           <button
@@ -133,18 +133,18 @@ export default function QuizPage({ params }: { params: { id: string } }) {
   const hasSelectedAnswer = answers[currentQuestion] !== undefined;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between">
-      <header className="border-b border-white/5 py-6">
+    <div className="min-h-screen bg-transparent text-slate-800 dark:text-white flex flex-col justify-between">
+      <header className="border-b border-slate-200 dark:border-white/5 py-6 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-6 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold text-white">Lesson Practice</h1>
-            <p className="text-slate-400 text-xs mt-1">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Lesson Practice</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Question {currentQuestion + 1} of {questions.length}
             </p>
           </div>
           <button
             onClick={() => router.back()}
-            className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all"
           >
             Cancel
           </button>
@@ -152,10 +152,10 @@ export default function QuizPage({ params }: { params: { id: string } }) {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-12 flex-1 w-full flex flex-col justify-center">
-        <div className="bg-white/[0.02] border border-white/5 p-8 rounded-2xl shadow-xl w-full">
+        <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-8 rounded-2xl shadow-xl w-full">
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="w-full bg-white/5 rounded-full h-1.5">
+            <div className="w-full bg-slate-100 dark:bg-white/5 rounded-full h-1.5">
               <div
                 className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300"
                 style={{
@@ -166,7 +166,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
           </div>
 
           {/* Question */}
-          <h2 className="text-lg font-semibold text-white mb-8 leading-relaxed">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-8 leading-relaxed">
             {question.question || question.text}
           </h2>
 
@@ -177,25 +177,25 @@ export default function QuizPage({ params }: { params: { id: string } }) {
               const correctAns = question.answer;
               const isCorrectOption = option === correctAns;
 
-              let buttonStyle = "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10";
+              let buttonStyle = "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10";
               if (hasSelectedAnswer) {
                 if (isCorrectOption) {
-                  buttonStyle = "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shadow-md shadow-emerald-500/5";
+                  buttonStyle = "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-md shadow-emerald-500/5";
                 } else if (isSelected) {
-                  buttonStyle = "bg-rose-500/15 border-rose-500/30 text-rose-400";
+                  buttonStyle = "bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400";
                 } else {
-                  buttonStyle = "bg-white/[0.02] border-white/5 text-slate-600 opacity-60 pointer-events-none";
+                  buttonStyle = "bg-slate-100/50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 text-slate-400 opacity-60 pointer-events-none";
                 }
               } else if (isSelected) {
-                buttonStyle = "bg-indigo-500/10 border-indigo-500/30 text-indigo-300";
+                buttonStyle = "bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-300";
               }
 
               return (
                 <button
-                  key={option}
-                  onClick={() => handleAnswer(option)}
-                  disabled={hasSelectedAnswer}
-                  className={`w-full p-4 border rounded-xl text-left text-sm transition-all duration-200 flex items-center justify-between ${buttonStyle}`}
+                   key={option}
+                   onClick={() => handleAnswer(option)}
+                   disabled={hasSelectedAnswer}
+                   className={`w-full p-4 border rounded-xl text-left text-sm transition-all duration-200 flex items-center justify-between ${buttonStyle}`}
                 >
                   <span>{option}</span>
                   {hasSelectedAnswer && isCorrectOption && (
@@ -219,8 +219,8 @@ export default function QuizPage({ params }: { params: { id: string } }) {
 
           {/* Explanation Panel */}
           {hasSelectedAnswer && (
-            <div className="p-4 rounded-xl bg-indigo-500/[0.04] border border-indigo-500/15 text-slate-300 text-xs leading-relaxed mb-8 animate-fadeIn">
-              <div className="flex items-center gap-1.5 text-indigo-400 font-bold mb-1.5 uppercase tracking-wider text-[10px]">
+            <div className="p-4 rounded-xl bg-indigo-500/[0.04] border border-indigo-500/15 text-slate-700 dark:text-slate-300 text-xs leading-relaxed mb-8 animate-fadeIn">
+              <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold mb-1.5 uppercase tracking-wider text-[10px]">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -231,11 +231,11 @@ export default function QuizPage({ params }: { params: { id: string } }) {
           )}
 
           {/* Navigation */}
-          <div className="flex gap-4 justify-between pt-4 border-t border-white/5">
+          <div className="flex gap-4 justify-between pt-4 border-t border-slate-200 dark:border-white/5">
             <button
               onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
               disabled={currentQuestion === 0}
-              className="px-6 py-2.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none text-slate-300 rounded-xl text-xs font-semibold border border-white/5 transition-all"
+              className="px-6 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/5 transition-all"
             >
               Previous
             </button>

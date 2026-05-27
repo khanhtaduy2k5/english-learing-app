@@ -59,18 +59,18 @@ export default function LessonPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-transparent text-slate-800 dark:text-white">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-400 text-sm animate-pulse">Đang tải dữ liệu bài học...</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm animate-pulse">Đang tải dữ liệu bài học...</p>
       </div>
     );
   }
 
   if (!lesson) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-transparent text-slate-800 dark:text-white p-6 text-center">
         <h2 className="text-2xl font-bold mb-2">Không Tìm Thấy Bài Học</h2>
-        <p className="text-slate-400 text-sm mb-6 max-w-md">Bài học này không tồn tại hoặc đã bị xóa khỏi hệ thống.</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-md">Bài học này không tồn tại hoặc đã bị xóa khỏi hệ thống.</p>
         <button
           onClick={() => router.push("/lessons")}
           className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all duration-200"
@@ -103,20 +103,20 @@ export default function LessonPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-slate-100 flex flex-col animate-fadeIn">
+    <div className="min-h-screen bg-transparent text-slate-800 dark:text-slate-100 flex flex-col animate-fadeIn">
       {/* Header */}
-      <header className="border-b border-white/5 bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50 transition-all">
+      <header className="border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50 transition-all">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/lessons")}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-slate-300 transition-all"
+              className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition-all"
               title="Quay lại"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight line-clamp-1">{lesson.title}</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight line-clamp-1">{lesson.title}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs font-semibold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/10">
                   {lesson.level}
@@ -150,8 +150,8 @@ export default function LessonPage({ params }: { params: { id: string } }) {
         
         {/* Left Side: Study Tracker Panel */}
         <aside className="w-full md:w-64 shrink-0 flex flex-col gap-4">
-          <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl flex flex-col gap-5">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-xl flex flex-col gap-5">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-indigo-400" /> Tiến trình học
             </h3>
             
@@ -172,7 +172,7 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                     className={`w-full flex items-center justify-between p-3.5 rounded-xl text-left text-sm font-medium transition-all ${
                       isActive
                         ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                        : "bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10 hover:text-white"
+                        : "bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ export default function LessonPage({ params }: { params: { id: string } }) {
                       <span>{tab.label}</span>
                     </div>
                     {tab.count !== undefined && (
-                      <span className={`text-xs px-2 py-0.5 rounded-md ${isActive ? "bg-white/20 text-white" : "bg-white/5 text-slate-500"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-md ${isActive ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-white/5 text-slate-500"}`}>
                         {tab.count}
                       </span>
                     )}
@@ -189,7 +189,7 @@ export default function LessonPage({ params }: { params: { id: string } }) {
               })}
             </div>
 
-            <div className="pt-4 border-t border-white/5 text-center">
+            <div className="pt-4 border-t border-slate-200 dark:border-white/5 text-center">
               <p className="text-xs text-slate-500 leading-relaxed">
                 Tất cả dữ liệu được đồng bộ hóa với cơ sở dữ liệu PostgreSQL local của bạn.
               </p>
@@ -199,7 +199,7 @@ export default function LessonPage({ params }: { params: { id: string } }) {
 
         {/* Right Side: Tab Panel Container */}
         <section className="flex-1 min-w-0">
-          <div className="bg-white/[0.02] border border-white/5 p-6 md:p-8 rounded-3xl shadow-xl min-h-[500px] flex flex-col">
+          <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-6 md:p-8 rounded-3xl shadow-xl min-h-[500px] flex flex-col">
             
             {activeTab === "vocab" && (
               <VocabTab vocabList={vocabList} />

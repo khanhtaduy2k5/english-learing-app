@@ -1,6 +1,8 @@
 spring:
   application:
     name: english-learning-app
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   config:
     import: optional:file:.env[.properties]
   docker:
@@ -34,3 +36,6 @@ groq:
     key: ${GROQ_API_KEY:}
     url: https://api.groq.com/openai/v1/chat/completions
   model: llama-3.3-70b-versatile
+
+server:
+  shutdown: graceful

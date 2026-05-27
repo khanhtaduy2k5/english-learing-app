@@ -1,4 +1,24 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: english-db-local
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: english_learning
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-local-data:/var/lib/postgresql/data
+    networks:
+      - english-learning-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d english_learning"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -24,8 +44,11 @@ services:
     environment:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/english_learning
     depends_on:
       redis:
+        condition: service_healthy
+      db:
         condition: service_healthy
     networks:
       - english-learning-network
@@ -52,6 +75,10 @@ services:
         condition: service_healthy
     networks:
       - english-learning-network
+
+volumes:
+  postgres-local-data:
+    driver: local
 
 networks:
   english-learning-network:

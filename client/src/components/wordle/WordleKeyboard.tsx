@@ -14,10 +14,10 @@ const KEYS = [
 export default function WordleKeyboard({ usedLetters, onKeyPress }: WordleKeyboardProps) {
   const getKeyColor = (key: string) => {
     const feedback = usedLetters[key];
-    if (feedback === "CORRECT") return "bg-gradient-to-br from-emerald-400 to-teal-500 text-white border-transparent shadow-emerald-500/20 shadow-lg";
+    if (feedback === "CORRECT") return "bg-gradient-to-br from-emerald-400 to-teal-500 text-white border-transparent shadow-emerald-500/20 shadow-lg animate-pulse";
     if (feedback === "PRESENT") return "bg-gradient-to-br from-amber-400 to-orange-500 text-white border-transparent shadow-amber-500/20 shadow-lg";
-    if (feedback === "ABSENT") return "bg-white/5 text-slate-500 border-white/5 opacity-80";
-    return "bg-white/[0.05] text-white border-white/[0.06] hover:bg-white/[0.1] hover:border-white/20";
+    if (feedback === "ABSENT") return "bg-slate-300 dark:bg-white/5 text-slate-600 dark:text-slate-500 border-slate-400/20 dark:border-white/5 opacity-80";
+    return "bg-slate-100 dark:bg-white/[0.05] text-slate-800 dark:text-white border-slate-200 dark:border-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] hover:border-slate-300 dark:hover:border-white/20";
   };
 
   return (
@@ -26,9 +26,9 @@ export default function WordleKeyboard({ usedLetters, onKeyPress }: WordleKeyboa
         <div key={i} className="flex gap-1.5 w-full justify-center">
           {row.map((key) => {
             const isAction = key === "ENTER" || key === "BACKSPACE";
-            const baseClass = "h-14 rounded-xl font-bold transition-all duration-300 border flex items-center justify-center backdrop-blur-md active:scale-90 active:brightness-90";
+            const baseClass = "h-14 rounded-xl font-bold transition-all duration-300 border flex items-center justify-center backdrop-blur-md active:scale-90 active:brightness-90 shadow-sm";
             const colorClass = isAction 
-              ? "bg-white/[0.08] text-white border-white/10 hover:bg-white/[0.15] hover:border-white/20 shadow-lg" 
+              ? "bg-slate-200 dark:bg-white/[0.08] text-slate-800 dark:text-white border-slate-300 dark:border-white/10 hover:bg-slate-300 dark:hover:bg-white/[0.15] hover:border-slate-400 dark:hover:border-white/20 shadow-lg" 
               : getKeyColor(key);
             
             return (

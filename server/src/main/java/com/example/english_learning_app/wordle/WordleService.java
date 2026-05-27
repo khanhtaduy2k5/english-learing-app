@@ -13,9 +13,22 @@ public class WordleService {
 
     private final Map<String, WordleGame> games = new ConcurrentHashMap<>();
     
-    // Sample dictionary for testing
+    // Rich vocabulary of 80 popular 5-letter English words
     private static final List<String> DICTIONARY = List.of(
-        "APPLE", "TRAIN", "HOUSE", "MOUSE", "BRICK", "WATER", "RIVER", "OCEAN", "SWORD", "MAGIC"
+        // Nature & Elements
+        "EARTH", "RIVER", "OCEAN", "WATER", "PLANT", "GRASS", "STONE", "CLOUD", "RAINY", "SUNNY",
+        "BEACH", "FLOWER", "STORM", "LIGHT", "NIGHT", "SPACE", "WORLD", "FLAME", "SHINE", "SHADE",
+        // Animals
+        "MOUSE", "TIGER", "PANDA", "EAGLE", "SHARK", "WHALE", "ZEBRA", "HORSE", "KOALA", "CAMEL",
+        // Objects & Lifestyle
+        "HOUSE", "CHAIR", "TABLE", "CLOCK", "GLASS", "KNIFE", "SPOON", "PAPER", "BOARD", "PHONE",
+        "BRICK", "TRAIN", "TRUCK", "PLANE", "SHIRT", "JEANS", "SMILE", "HEART", "DREAM", "CROWN",
+        // Learning & Food
+        "APPLE", "BREAD", "FRUIT", "SWEET", "HONEY", "MUSIC", "MAGIC", "SWORD", "BOOKS", "STUDY",
+        "LEARN", "CLASS", "TEACH", "WRITE", "SPEAK", "SOUND", "SMART", "BRAIN", "THINK", "YOUTH",
+        // Adjectives & General
+        "GREAT", "HAPPY", "GREEN", "BLACK", "WHITE", "BROWN", "FRESH", "CLEAN", "QUICK", "QUIET",
+        "ALERT", "ABOUT", "BRING", "DRAFT", "FLUTE", "LEMON", "PIECE", "PIZZA", "RADIO", "VOICE"
     );
     private final Random random = new Random();
 

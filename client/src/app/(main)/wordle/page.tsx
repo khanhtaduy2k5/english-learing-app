@@ -112,7 +112,7 @@ export default function WordlePage() {
   }, [handleKeyPress]);
 
   if (!game && loading) {
-    return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading Wordle...</div>;
+    return <div className="min-h-screen bg-transparent text-slate-800 dark:text-white flex items-center justify-center">Loading Wordle...</div>;
   }
 
   const usedLetters: Record<string, LetterFeedback> = {};
@@ -130,14 +130,14 @@ export default function WordlePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] text-white flex flex-col items-center pt-8 px-4 relative overflow-hidden">
+    <div className="min-h-[calc(100vh-4rem)] text-slate-800 dark:text-white flex flex-col items-center pt-8 px-4 relative overflow-hidden transition-colors duration-300">
       {/* Background Gradients */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
 
-      <header className="w-full max-w-lg flex justify-between items-center pb-4 border-b border-white/10 mb-8 z-10">
-        <h1 className="text-3xl font-bold tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Wordle</h1>
-        <button onClick={startGame} className="text-sm px-4 py-2 bg-white/[0.05] border border-white/10 hover:bg-white/10 hover:border-white/20 rounded-xl transition-all duration-300 font-medium active:scale-95 shadow-lg">
+      <header className="w-full max-w-lg flex justify-between items-center pb-4 border-b border-slate-200 dark:border-white/10 mb-8 z-10">
+        <h1 className="text-3xl font-bold tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-500 dark:from-white dark:to-slate-400">Wordle</h1>
+        <button onClick={startGame} className="text-sm px-4 py-2 bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 hover:border-slate-300 dark:hover:border-white/20 rounded-xl transition-all duration-300 font-medium active:scale-95 shadow-md shadow-indigo-500/5">
           New Game
         </button>
       </header>
@@ -146,7 +146,7 @@ export default function WordlePage() {
         <div className="h-12 w-full flex justify-center items-center mb-4">
           {error && (
             <div className="w-full max-w-sm px-4 py-2 bg-rose-500/20 border border-rose-500/30 rounded-xl text-center backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-300">
-              <span className="text-rose-200 font-medium text-sm">{error}</span>
+              <span className="text-rose-600 dark:text-rose-200 font-medium text-sm">{error}</span>
             </div>
           )}
         </div>
@@ -158,15 +158,15 @@ export default function WordlePage() {
         <div className="h-24 w-full flex items-center justify-center mt-6">
           {game?.status === "WON" && (
             <div className="w-full px-6 py-4 bg-gradient-to-r from-emerald-400/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl text-center backdrop-blur-xl shadow-2xl shadow-emerald-500/10 animate-bounce">
-              <h2 className="text-2xl font-bold text-emerald-300 mb-1">You Won!</h2>
-              <p className="text-emerald-100/70 text-sm">Congratulations, you found the word!</p>
+              <h2 className="text-2xl font-bold text-emerald-600 dark:text-emerald-300 mb-1">You Won!</h2>
+              <p className="text-emerald-800/70 dark:text-emerald-100/70 text-sm">Congratulations, you found the word!</p>
             </div>
           )}
 
           {game?.status === "LOST" && (
             <div className="w-full px-6 py-4 bg-gradient-to-r from-rose-400/20 to-pink-500/20 border border-rose-500/30 rounded-2xl text-center backdrop-blur-xl shadow-2xl shadow-rose-500/10">
-              <h2 className="text-2xl font-bold text-rose-300 mb-1">Game Over</h2>
-              <p className="text-rose-100/70 text-sm">The word was: <span className="font-bold tracking-widest">{game.targetWord}</span></p>
+              <h2 className="text-2xl font-bold text-rose-600 dark:text-rose-300 mb-1">Game Over</h2>
+              <p className="text-rose-800/70 dark:text-rose-100/70 text-sm">The word was: <span className="font-bold tracking-widest">{game.targetWord}</span></p>
             </div>
           )}
         </div>
@@ -178,3 +178,5 @@ export default function WordlePage() {
     </div>
   );
 }
+
+

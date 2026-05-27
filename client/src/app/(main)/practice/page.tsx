@@ -13,9 +13,9 @@ const practiceModes: { id: PracticeMode; title: string; description: string; ico
     title: "Speaking Practice",
     description: "Improve your pronunciation with AI-powered speech recognition and real-time feedback.",
     icon: "🎤",
-    color: "text-rose-400",
-    bg: "from-rose-500/20 to-pink-500/10",
-    border: "border-rose-500/20",
+    color: "text-rose-600 dark:text-rose-400",
+    bg: "from-rose-500/10 to-pink-500/5 dark:from-rose-500/20 dark:to-pink-500/10",
+    border: "border-rose-200 dark:border-rose-500/20",
     sessions: 12,
   },
   {
@@ -23,9 +23,9 @@ const practiceModes: { id: PracticeMode; title: string; description: string; ico
     title: "Listening Comprehension",
     description: "Train your ear with native speaker audio clips, dialogues, and dictation exercises.",
     icon: "🎧",
-    color: "text-blue-400",
-    bg: "from-blue-500/20 to-cyan-500/10",
-    border: "border-blue-500/20",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "from-blue-500/10 to-cyan-500/5 dark:from-blue-500/20 dark:to-cyan-500/10",
+    border: "border-blue-200 dark:border-blue-500/20",
     sessions: 18,
   },
   {
@@ -33,9 +33,9 @@ const practiceModes: { id: PracticeMode; title: string; description: string; ico
     title: "Writing Exercises",
     description: "Practice essay writing, sentence construction, and creative writing with AI corrections.",
     icon: "✍️",
-    color: "text-amber-400",
-    bg: "from-amber-500/20 to-yellow-500/10",
-    border: "border-amber-500/20",
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "from-amber-500/10 to-yellow-500/5 dark:from-amber-500/20 dark:to-yellow-500/10",
+    border: "border-amber-200 dark:border-amber-500/20",
     sessions: 15,
   },
   {
@@ -43,9 +43,9 @@ const practiceModes: { id: PracticeMode; title: string; description: string; ico
     title: "Reading Practice",
     description: "Read articles, stories, and passages with vocabulary highlights and comprehension questions.",
     icon: "📖",
-    color: "text-emerald-400",
-    bg: "from-emerald-500/20 to-green-500/10",
-    border: "border-emerald-500/20",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bg: "from-emerald-500/10 to-green-500/5 dark:from-emerald-500/20 dark:to-green-500/10",
+    border: "border-emerald-200 dark:border-emerald-500/20",
     sessions: 20,
   },
 ];
@@ -89,7 +89,7 @@ export default function PracticePage() {
   }, [activeMode]);
 
   return (
-    <div className="p-8 min-h-screen bg-gray-950 text-slate-100">
+    <div className="p-8 text-slate-800 dark:text-slate-100">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -100,8 +100,8 @@ export default function PracticePage() {
             </svg>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Practice</h1>
-            <p className="text-slate-400 text-sm">Sharpen your skills with interactive exercises</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Practice</h1>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Sharpen your skills with interactive exercises</p>
           </div>
         </div>
       </div>
@@ -115,16 +115,16 @@ export default function PracticePage() {
             className={`group relative p-6 rounded-2xl text-left transition-all duration-300 hover:-translate-y-1 overflow-hidden ${
               activeMode === mode.id
                 ? `bg-gradient-to-br ${mode.bg} border ${mode.border} shadow-lg`
-                : "bg-white/[0.03] border border-white/5 hover:border-white/10 hover:bg-white/[0.06]"
+                : "bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/[0.06] shadow-sm shadow-indigo-500/5 dark:shadow-none"
             }`}
           >
             <div className="flex items-start gap-4">
               <span className="text-4xl group-hover:scale-110 transition-transform duration-300">{mode.icon}</span>
               <div className="flex-1">
-                <h3 className={`text-lg font-bold mb-1 ${activeMode === mode.id ? mode.color : "text-white"}`}>
+                <h3 className={`text-lg font-bold mb-1 ${activeMode === mode.id ? mode.color : "text-slate-900 dark:text-white"}`}>
                   {mode.title}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-3">{mode.description}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-3">{mode.description}</p>
                 <div className="flex items-center gap-4">
                   <span className="text-xs text-slate-500">{mode.sessions} sessions available</span>
                   <span className={`inline-flex items-center gap-1 text-xs font-medium ${mode.color}`}>
@@ -142,13 +142,13 @@ export default function PracticePage() {
 
       {/* Expanded Skill Lessons Sub-list */}
       {activeMode && (
-        <div className="mb-10 p-6 rounded-3xl bg-white/[0.02] border border-white/5 animate-fadeIn">
-          <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+        <div className="mb-10 p-6 rounded-3xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-xl shadow-indigo-500/5 dark:shadow-none animate-fadeIn">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
             <div>
-              <h3 className="text-white font-bold text-base flex items-center gap-2">
+              <h3 className="text-slate-900 dark:text-white font-bold text-base flex items-center gap-2">
                 🎯 Bài tập thực hành sẵn có ({practiceModes.find(m => m.id === activeMode)?.title})
               </h3>
-              <p className="text-slate-400 text-xs mt-0.5">Chọn một bài học thực hành được đồng bộ trực tiếp từ máy chủ.</p>
+              <p className="text-slate-600 dark:text-slate-400 text-xs mt-0.5">Chọn một bài học thực hành được đồng bộ trực tiếp từ máy chủ.</p>
             </div>
             <span className="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
               {lessons.length} bài học
@@ -170,17 +170,17 @@ export default function PracticePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {lessons.map((lesson) => (
                 <Link href={`/lessons/${lesson.id}`} key={lesson.id} className="block group">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-indigo-500/20 group-hover:bg-white/[0.08] transition-all flex justify-between items-center gap-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 group-hover:bg-slate-100 dark:group-hover:bg-white/[0.08] transition-all flex justify-between items-center gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-500/25 text-indigo-300 border border-indigo-500/25 rounded">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25 rounded">
                           {lesson.level}
                         </span>
                         {lesson.duration && (
-                          <span className="text-[10px] text-slate-500⏱️">⏱️ {lesson.duration} phút</span>
+                          <span className="text-[10px] text-slate-500">⏱️ {lesson.duration} phút</span>
                         )}
                       </div>
-                      <h4 className="text-white font-bold text-sm truncate group-hover:text-indigo-400 transition-colors">
+                      <h4 className="text-slate-900 dark:text-white font-bold text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {lesson.title}
                       </h4>
                     </div>
@@ -198,8 +198,8 @@ export default function PracticePage() {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-xl font-bold text-white">Daily Challenges</h2>
-            <p className="text-slate-400 text-sm">Complete challenges to earn bonus XP</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Daily Challenges</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Complete challenges to earn bonus XP</p>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
             <span className="text-amber-400 text-sm font-medium">🔥 3/4 completed</span>
@@ -210,14 +210,14 @@ export default function PracticePage() {
           {dailyChallenges.map((challenge, i) => (
             <div
               key={challenge.id}
-              className={`p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 ${
+              className={`p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 shadow-md shadow-indigo-500/5 dark:shadow-none ${
                 i < 3
-                  ? "bg-emerald-500/[0.05] border-emerald-500/20"
-                  : "bg-white/[0.03] border-white/5 hover:border-indigo-500/20"
+                  ? "bg-emerald-50 dark:bg-emerald-500/[0.05] border-emerald-200 dark:border-emerald-500/20 text-slate-800 dark:text-slate-100"
+                  : "bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/5 hover:border-indigo-500/20"
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="px-2 py-0.5 rounded-lg text-xs font-medium bg-white/5 text-slate-300 border border-white/10">
+                <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">
                   {challenge.type}
                 </span>
                 {i < 3 ? (
@@ -228,7 +228,7 @@ export default function PracticePage() {
                   <span className="text-xs text-slate-500">{challenge.timeMin} min</span>
                 )}
               </div>
-              <h4 className="text-white font-semibold text-sm mb-2">{challenge.title}</h4>
+              <h4 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">{challenge.title}</h4>
               <div className="flex items-center justify-between">
                 <span className={`text-xs ${
                   challenge.difficulty === "Easy" ? "text-emerald-400" :
@@ -245,21 +245,21 @@ export default function PracticePage() {
 
       {/* Recent Sessions */}
       <div>
-        <h2 className="text-xl font-bold text-white mb-5">Recent Sessions</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-5">Recent Sessions</h2>
         <div className="space-y-3">
           {recentSessions.map((session) => (
             <div
               key={session.id}
-              className="flex items-center gap-5 p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-all"
+              className="flex items-center gap-5 p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-md shadow-indigo-500/5 dark:shadow-none transition-all"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center">
                 <span className="text-lg">
                   {session.type === "Speaking" ? "🎤" : session.type === "Listening" ? "🎧" : session.type === "Writing" ? "✍️" : "📖"}
                 </span>
               </div>
               <div className="flex-1">
-                <h4 className="text-white font-medium text-sm">{session.title}</h4>
-                <p className="text-slate-500 text-xs">{session.type} • {session.date} • {session.duration}</p>
+                <h4 className="text-slate-900 dark:text-white font-medium text-sm">{session.title}</h4>
+                <p className="text-slate-600 dark:text-slate-500 text-xs">{session.type} • {session.date} • {session.duration}</p>
               </div>
               <div className="text-right">
                 <div className={`text-lg font-bold ${

@@ -49,15 +49,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-50 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+      {/* Back to Home Button */}
+      <div className="absolute left-6 top-6 z-20">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 transition-all shadow-sm font-medium"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          EngSphere
+        </Link>
+      </div>
 
       <div className="absolute right-6 top-6 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md backdrop-blur-xl relative z-10">
+      <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 p-8 rounded-3xl shadow-xl shadow-indigo-500/5 dark:shadow-2xl w-full max-w-md backdrop-blur-xl relative z-10 transition-all duration-300">
         <div className="flex justify-center mb-6">
           <Link href="/" className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,16 +79,16 @@ export default function LoginPage() {
           </Link>
         </div>
         
-        <h1 className="text-3xl font-bold text-center mb-2 text-white">
+        <h1 className="text-3xl font-bold text-center mb-2 text-slate-900 dark:text-white">
           Welcome back
         </h1>
-        <p className="text-slate-400 text-center mb-8">Sign in to continue your learning journey.</p>
+        <p className="text-slate-600 dark:text-slate-400 text-center mb-8">Sign in to continue your learning journey.</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
               htmlFor={emailId}
-              className="block text-sm font-medium text-slate-300 mb-2"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
             >
               Email address
             </label>
@@ -84,7 +97,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all focus:bg-white dark:focus:bg-transparent"
               placeholder="you@example.com"
               required
             />
@@ -93,7 +106,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor={passwordId}
-              className="block text-sm font-medium text-slate-300 mb-2"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
             >
               Password
             </label>
@@ -102,7 +115,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-slate-500 transition-all"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all focus:bg-white dark:focus:bg-transparent"
               placeholder="••••••••"
               required
             />
@@ -129,11 +142,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center mt-8 text-slate-400 text-sm">
+        <p className="text-center mt-8 text-slate-600 dark:text-slate-400 text-sm">
           Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="text-indigo-400 font-medium hover:text-indigo-300 transition-colors"
+            className="text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
           >
             Create one
           </Link>
