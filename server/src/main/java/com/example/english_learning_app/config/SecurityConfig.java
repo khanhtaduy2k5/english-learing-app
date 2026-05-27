@@ -2,6 +2,7 @@ package com.example.english_learning_app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,7 +34,16 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
-            .requestMatchers("/api/health/**").permitAll()
+            .requestMatchers("/error").permitAll()
+            .requestMatchers("/api/health", "/api/health/**").permitAll()
+            .requestMatchers(HttpMethod.GET,
+                "/api/levels/**",
+                "/api/units/**",
+                "/api/lessons/**",
+                "/api/grammar/**",
+                "/api/reading/**",
+                "/api/exams/**"
+            ).permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .anyRequest().authenticated()
         )

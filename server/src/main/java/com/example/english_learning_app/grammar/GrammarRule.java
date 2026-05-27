@@ -9,7 +9,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Table(name = "grammar_rules")
@@ -34,11 +33,11 @@ public class GrammarRule {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
-    private List<Map<String, Object>> examples;
+    private List<Object> examples;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
-    private List<Map<String, Object>> questions;
+    private List<Object> questions;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

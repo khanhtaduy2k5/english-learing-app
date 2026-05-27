@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Table(name = "lesson_grammar_details")
@@ -32,5 +31,5 @@ public class GrammarDetails {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "grammar_examples", nullable = false)
-    private List<Map<String, Object>> grammarExamples;
+    private List<Object> grammarExamples;
 }

@@ -5,6 +5,8 @@ import com.example.english_learning_app.lesson.quiz.Question;
 import com.example.english_learning_app.lesson.quiz.QuestionOption;
 import com.example.english_learning_app.lesson.tip.LessonTip;
 import com.example.english_learning_app.localization.TranslationService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -17,6 +19,8 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class LessonService {
 
+    private static final Pageable DEFAULT_SUMMARY_PAGE = PageRequest.of(0, 200);
+
     private final LessonRepository lessonRepository;
     private final TranslationService translationService;
 
@@ -26,25 +30,25 @@ public class LessonService {
     }
 
     public List<LessonController.LessonSummaryDto> getLessons(String locale) {
-        return lessonRepository.findAll().stream()
+        return lessonRepository.findAllSummaries(DEFAULT_SUMMARY_PAGE).stream()
             .map(lesson -> toSummaryDto(lesson, locale))
             .toList();
     }
 
     public List<LessonController.LessonSummaryDto> getLessonsByLevel(String level, String locale) {
-        return lessonRepository.findByLevel(level).stream()
+        return lessonRepository.findSummariesByLevel(level, DEFAULT_SUMMARY_PAGE).stream()
             .map(lesson -> toSummaryDto(lesson, locale))
             .toList();
     }
 
     public List<LessonController.LessonSummaryDto> getLessonsByUnit(String unitId, String locale) {
-        return lessonRepository.findByUnitId(unitId).stream()
+        return lessonRepository.findSummariesByUnitId(unitId, DEFAULT_SUMMARY_PAGE).stream()
             .map(lesson -> toSummaryDto(lesson, locale))
             .toList();
     }
 
     public List<LessonController.LessonSummaryDto> getLessonsBySkill(String skill, String locale) {
-        return lessonRepository.findBySkill(skill).stream()
+        return lessonRepository.findSummariesBySkill(skill, DEFAULT_SUMMARY_PAGE).stream()
             .map(lesson -> toSummaryDto(lesson, locale))
             .toList();
     }
@@ -65,7 +69,7 @@ public class LessonService {
                 mapVocab(lesson.getLessonVocabularies(), locale),
                 // Map ngữ pháp
                 lesson.getGrammarDetails() != null ? translationService.translate("lesson_grammar", lesson.getGrammarDetails().getId(), "grammar_rule", locale, lesson.getGrammarDetails().getGrammarRule()) : null,
-                lesson.getGrammarDetails() != null ? lesson.getGrammarDetails().getGrammarExamples() : List.of(),
+                lesson.getGrammarDetails() != null ? normalizeGrammarExamples(lesson.getGrammarDetails().getGrammarExamples()) : List.of(),
                 // Map chi tiết bài đọc (passage)
                 lesson.getReadingDetails() != null ? translationService.translate("lesson_reading", lesson.getReadingDetails().getId(), "passage", locale, lesson.getReadingDetails().getPassage()) : null,
                 // Map chi tiết bài nghe (script)
@@ -89,7 +93,7 @@ public class LessonService {
 
     // --- CÁC HÀM MAPPING TIỆN ÍCH TƯƠNG THÍCH NGƯỢC ---
 
-    private LessonController.LessonSummaryDto toSummaryDto(Lesson lesson, String locale) {
+    private LessonController.LessonSummaryDto toSummaryDto(LessonRepository.LessonSummaryProjection lesson, String locale) {
         return new LessonController.LessonSummaryDto(
             lesson.getId(),
             lesson.getUnitId(),
@@ -126,6 +130,24 @@ public class LessonService {
         return tips.stream()
             .map(tip -> translationService.translate("lesson_tip", tip.getId(), "tip_text", locale, tip.getTipText()))
             .toList();
+    }
+
+    private List<Map<String, Object>> normalizeGrammarExamples(List<Object> examples) {
+        if (examples == null) return List.of();
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Object example : examples) {
+            if (example instanceof Map<?, ?> mapExample) {
+                Map<String, Object> normalized = new HashMap<>();
+                mapExample.forEach((key, value) -> normalized.put(String.valueOf(key), value));
+                list.add(normalized);
+            } else if (example instanceof String text && !text.isBlank()) {
+                Map<String, Object> normalized = new HashMap<>();
+                normalized.put("english", text);
+                normalized.put("vietnamese", "");
+                list.add(normalized);
+            }
+        }
+        return list;
     }
 
     private List<Map<String, Object>> mapQuestions(List<Question> questions, String locale) {

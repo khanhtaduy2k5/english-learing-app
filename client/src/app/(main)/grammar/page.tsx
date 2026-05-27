@@ -76,8 +76,15 @@ export default function GrammarPage() {
     }
   };
 
+  const normalizeQuestion = (question: any) => {
+    if (typeof question === "string") {
+      return { question, options: [], answer: "" };
+    }
+    return question;
+  };
+
   const activeRule = rules.find((r) => r.id === activeQuizId);
-  const activeQuestions = activeRule?.questions || [];
+  const activeQuestions = (activeRule?.questions || []).map(normalizeQuestion);
   const currentQuestion = activeQuestions[currentQuestionIdx];
 
   return (
@@ -181,15 +188,24 @@ export default function GrammarPage() {
                         <div>
                           <h4 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Sentence Examples</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {rule.examples.map((ex: any, idx: number) => (
-                              <div key={idx} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                                <p className="text-indigo-300 font-medium text-sm">“{ex.english}”</p>
-                                <p className="text-slate-400 text-xs mt-1">{ex.vietnamese || ex.meaning}</p>
-                                {ex.note && (
-                                  <p className="text-slate-500 text-[10px] italic mt-1">Note: {ex.note}</p>
-                                )}
-                              </div>
-                            ))}
+                            {rule.examples.map((ex: any, idx: number) => {
+                              const example =
+                                typeof ex === "string"
+                                  ? { english: ex, vietnamese: "", note: "" }
+                                  : ex;
+
+                              return (
+                                <div key={idx} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                                  <p className="text-indigo-300 font-medium text-sm">"{example.english || example.text || example.example}"</p>
+                                  {(example.vietnamese || example.meaning) && (
+                                    <p className="text-slate-400 text-xs mt-1">{example.vietnamese || example.meaning}</p>
+                                  )}
+                                  {example.note && (
+                                    <p className="text-slate-500 text-[10px] italic mt-1">Note: {example.note}</p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -222,7 +238,7 @@ export default function GrammarPage() {
                                   
                                   {/* Options List */}
                                   <div className="grid grid-cols-1 gap-2">
-                                    {(currentQuestion.options as string[]).map((option) => {
+                                    {((currentQuestion.options || []) as string[]).map((option) => {
                                       const isSelected = selectedAnswer === option;
                                       const isCorrect = option === currentQuestion.answer;
                                       
