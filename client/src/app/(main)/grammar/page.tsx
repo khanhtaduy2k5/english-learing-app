@@ -196,7 +196,7 @@ export default function GrammarPage() {
 
                               return (
                                 <div key={idx} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                                  <p className="text-indigo-300 font-medium text-sm">"{example.english || example.text || example.example}"</p>
+                                  <p className="text-indigo-300 font-medium text-sm">&ldquo;{example.english || example.text || example.example}&rdquo;</p>
                                   {(example.vietnamese || example.meaning) && (
                                     <p className="text-slate-400 text-xs mt-1">{example.vietnamese || example.meaning}</p>
                                   )}

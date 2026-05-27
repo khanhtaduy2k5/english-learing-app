@@ -1,13 +1,19 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterPage() {
+  const { logout } = useAuthStore();
+
+  useEffect(() => {
+    logout();
+  }, [logout]);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,7 +27,6 @@ export default function RegisterPage() {
   const passwordId = useId();
   const confirmPasswordId = useId();
   const router = useRouter();
-  const { authenticate } = useAuthStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -42,22 +47,31 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await apiClient.register({
+      await apiClient.register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
-      const { token, user } = response.data;
-
-      authenticate(user, token);
-      router.push("/dashboard");
+      // Registration successful — redirect to login page
+      router.push("/login?registered=true");
     } catch (err: any) {
       if (err.response?.data) {
         // Handle Spring Boot validation errors format
-        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
-          setError(err.response.data.errors.map((e: any) => e.defaultMessage || e.msg).join(", "));
+        if (
+          err.response.data.errors &&
+          Array.isArray(err.response.data.errors)
+        ) {
+          setError(
+            err.response.data.errors
+              .map((e: any) => e.defaultMessage || e.msg)
+              .join(", "),
+          );
         } else {
-          setError(err.response.data.message || err.response.data.error || "Registration failed");
+          setError(
+            err.response.data.message ||
+              err.response.data.error ||
+              "Registration failed",
+          );
         }
       } else {
         setError("Registration failed. Please check your connection.");
@@ -74,12 +88,22 @@ export default function RegisterPage() {
 
       {/* Back to Home Button */}
       <div className="absolute left-6 top-6 z-20">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 transition-all shadow-sm font-medium"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
           </svg>
           EngSphere
         </Link>
@@ -91,17 +115,32 @@ export default function RegisterPage() {
 
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 p-8 rounded-3xl shadow-xl shadow-purple-500/5 dark:shadow-2xl w-full max-w-md backdrop-blur-xl relative z-10 transition-all duration-300">
         <div className="flex justify-center mb-6">
-          <Link href="/" className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          <Link
+            href="/"
+            className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20"
+          >
+            <svg
+              className="w-7 h-7 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
             </svg>
           </Link>
         </div>
-        
+
         <h1 className="text-3xl font-bold text-center mb-2 text-slate-900 dark:text-white">
           Create Account
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-center mb-8">Start your journey to fluency today.</p>
+        <p className="text-slate-600 dark:text-slate-400 text-center mb-8">
+          Start your journey to fluency today.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

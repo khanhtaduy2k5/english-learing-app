@@ -14,14 +14,27 @@ export function middleware(request: NextRequest) {
   // Check if current path is a public path
   // Exactly matches "/" or starts with "/login" or "/register"
   const isPublicPath = publicPaths.some((path) =>
-    path === "/" ? pathname === "/" : pathname.startsWith(path)
+    path === "/" ? pathname === "/" : pathname.startsWith(path),
   );
 
   const isPublicAuthPath = publicAuthPaths.some((path) =>
     pathname.startsWith(path),
   );
 
-  // Redirect authenticated users away from login/register
+  const isRegisterPath = pathname.startsWith("/register");
+
+  // Let /register load once so the stale token can be cleared on the client.
+  if (isRegisterPath && token) {
+    const response = NextResponse.next();
+    response.cookies.set("token", "", {
+      path: "/",
+      maxAge: 0,
+      sameSite: "lax",
+    });
+    return response;
+  }
+
+  // Redirect authenticated users away from login
   if (isPublicAuthPath && token) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }

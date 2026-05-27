@@ -7,7 +7,9 @@ import { useAuthStore } from "@/store/authStore";
 import { Lesson, LessonSummary } from "@/types";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+  typeof window !== "undefined"
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 class ApiClient {
   private client: AxiosInstance;
@@ -30,12 +32,14 @@ class ApiClient {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         // Add Accept-Language header for i18n
         const language =
-          typeof window !== "undefined" ? localStorage.getItem("language") || "vi" : "vi";
+          typeof window !== "undefined"
+            ? localStorage.getItem("language") || "vi"
+            : "vi";
         config.headers["Accept-Language"] = language;
-        
+
         return config;
       },
       (error) => Promise.reject(error),
@@ -55,7 +59,6 @@ class ApiClient {
       },
     );
   }
-
 
   // Auth endpoints
   async login(email: string, password: string) {
@@ -82,7 +85,9 @@ class ApiClient {
   }
 
   async makeWordleGuess(id: string, guess: string) {
-    const response = await this.client.post(`/api/wordle/${id}/guess`, { guess });
+    const response = await this.client.post(`/api/wordle/${id}/guess`, {
+      guess,
+    });
     return response.data;
   }
 
@@ -93,7 +98,9 @@ class ApiClient {
   }
 
   async getUnits(level?: string) {
-    const response = await this.client.get<any[]>("/api/units", { params: { level } });
+    const response = await this.client.get<any[]>("/api/units", {
+      params: { level },
+    });
     return response.data;
   }
 
@@ -103,8 +110,14 @@ class ApiClient {
   }
 
   // Lessons
-  async getLessons(params?: { level?: string; unitId?: string; skill?: string }) {
-    const response = await this.client.get<LessonSummary[]>("/api/lessons", { params });
+  async getLessons(params?: {
+    level?: string;
+    unitId?: string;
+    skill?: string;
+  }) {
+    const response = await this.client.get<LessonSummary[]>("/api/lessons", {
+      params,
+    });
     return response.data;
   }
 
@@ -113,7 +126,6 @@ class ApiClient {
     return response.data;
   }
 
-
   async getLessonQuiz(id: string) {
     const response = await this.client.get<any>(`/api/lessons/${id}/quiz`);
     return response.data;
@@ -121,7 +133,9 @@ class ApiClient {
 
   // Grammar
   async getGrammarRules(level?: string) {
-    const response = await this.client.get<any[]>("/api/grammar", { params: { level } });
+    const response = await this.client.get<any[]>("/api/grammar", {
+      params: { level },
+    });
     return response.data;
   }
 
@@ -132,7 +146,9 @@ class ApiClient {
 
   // Reading
   async getReadingPassages(level?: string) {
-    const response = await this.client.get<any[]>("/api/reading", { params: { level } });
+    const response = await this.client.get<any[]>("/api/reading", {
+      params: { level },
+    });
     return response.data;
   }
 
@@ -154,21 +170,30 @@ class ApiClient {
 
   // User Progress
   async getUserProgress(userId: string) {
-    const response = await this.client.get<any[]>(`/api/progress/user/${userId}`);
+    const response = await this.client.get<any[]>(
+      `/api/progress/user/${userId}`,
+    );
     return response.data;
   }
 
   async getLessonProgress(userId: string, lessonId: string) {
-    const response = await this.client.get<any>(`/api/progress/user/${userId}/lesson/${lessonId}`);
+    const response = await this.client.get<any>(
+      `/api/progress/user/${userId}/lesson/${lessonId}`,
+    );
     return response.data;
   }
 
-  async updateProgress(userId: string, lessonId: string, status: string, quizScore?: number) {
+  async updateProgress(
+    userId: string,
+    lessonId: string,
+    status: string,
+    quizScore?: number,
+  ) {
     const response = await this.client.post<any>("/api/progress", {
       userId,
       lessonId,
       status,
-      quizScore
+      quizScore,
     });
     return response.data;
   }
