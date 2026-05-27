@@ -180,6 +180,34 @@ class ApiClient {
     return response.data;
   }
 
+  // Public APIs proxy
+  async getDailyQuote() {
+    const response = await this.client.get<{ content: string; author: string }>("/api/public/quote");
+    return response.data;
+  }
+
+  async getDailyJoke() {
+    const response = await this.client.get<{ setup: string; punchline: string }>("/api/public/joke");
+    return response.data;
+  }
+
+  async getTriviaQuestions(difficulty?: string) {
+    const response = await this.client.get<any[]>("/api/public/trivia", {
+      params: { difficulty },
+    });
+    return response.data;
+  }
+
+  async getNewsArticles() {
+    const response = await this.client.get<any[]>("/api/public/news");
+    return response.data;
+  }
+
+  async getEnglishRadioStations() {
+    const response = await this.client.get<any[]>("/api/public/radio");
+    return response.data;
+  }
+
   // Generic GET
   async get<T>(url: string) {
     const response = await this.client.get<T>(url);

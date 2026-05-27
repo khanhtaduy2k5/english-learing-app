@@ -1,11 +1,82 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardBody } from "@/components/Card";
+import { apiClient } from "@/lib/api";
+
+interface Quote {
+  content: string;
+  author: string;
+}
+
+interface Joke {
+  setup: string;
+  punchline: string;
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  
+  // State for Daily Quote
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [loadingQuote, setLoadingQuote] = useState(true);
+
+  // State for Daily Joke
+  const [joke, setJoke] = useState<Joke | null>(null);
+  const [loadingJoke, setLoadingJoke] = useState(true);
+  const [jokeFlipped, setJokeFlipped] = useState(false);
+
+  // Fetch data on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboardData() {
+      try {
+        const quoteData = await apiClient.getDailyQuote();
+        if (isMounted) {
+          setQuote(quoteData);
+          setLoadingQuote(false);
+        }
+      } catch (err) {
+        console.error("Failed to load daily quote:", err);
+        if (isMounted) setLoadingQuote(false);
+      }
+
+      try {
+        const jokeData = await apiClient.getDailyJoke();
+        if (isMounted) {
+          setJoke(jokeData);
+          setLoadingJoke(false);
+        }
+      } catch (err) {
+        console.error("Failed to load daily joke:", err);
+        if (isMounted) setLoadingJoke(false);
+      }
+    }
+
+    loadDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Fetch another joke
+  const handleGetAnotherJoke = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card from flipping back immediately
+    setLoadingJoke(true);
+    setJokeFlipped(false);
+    try {
+      const jokeData = await apiClient.getDailyJoke();
+      setJoke(jokeData);
+      setLoadingJoke(false);
+    } catch (err) {
+      console.error("Failed to load new joke:", err);
+      setLoadingJoke(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -43,6 +114,94 @@ export default function DashboardPage() {
             </CardBody>
           </Card>
         ))}
+      </div>
+
+      {/* Dynamic Interactive Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quote of the Day - Premium Glassmorphism UI */}
+        <div className="relative p-6 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-background border border-border shadow-xl backdrop-blur-md flex flex-col justify-between min-h-[220px] group transition-all duration-300 hover:shadow-indigo-500/5 hover:border-indigo-500/20">
+          <div className="absolute -top-10 -left-6 text-9xl text-indigo-500/10 font-serif select-none pointer-events-none group-hover:scale-110 transition-transform duration-500">“</div>
+          
+          <div className="relative z-10 space-y-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              💡 Quote of the Day
+            </span>
+            {loadingQuote ? (
+              <div className="space-y-2 animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-5/6"></div>
+              </div>
+            ) : (
+              <p className="text-base md:text-lg font-medium text-foreground leading-relaxed italic pr-4">
+                {quote?.content || "No quote loaded"}
+              </p>
+            )}
+          </div>
+
+          <div className="relative z-10 mt-4 flex items-center justify-between border-t border-border/40 pt-4">
+            <span className="text-xs text-muted-foreground">Expand your perspective</span>
+            {!loadingQuote && (
+              <span className="text-sm font-semibold text-indigo-400 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10">
+                — {quote?.author || "Unknown"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Daily Joke - 3D Flip Card UI */}
+        <div 
+          className="perspective-1000 w-full h-[220px]"
+          onClick={() => setJokeFlipped(!jokeFlipped)}
+        >
+          <div className={`relative w-full h-full transition-transform duration-700 transform-style-3d cursor-pointer ${jokeFlipped ? 'rotate-y-180' : ''}`}>
+            
+            {/* Front Card (Setup) */}
+            <div className="absolute w-full h-full backface-hidden p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-background border border-border shadow-xl backdrop-blur-md flex flex-col justify-between hover:border-purple-500/20 transition-all duration-300">
+              <div className="space-y-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  🎭 Daily Riddle & Fun
+                </span>
+                {loadingJoke ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-4 bg-muted rounded w-4/5"></div>
+                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                  </div>
+                ) : (
+                  <p className="text-base md:text-lg font-bold text-foreground leading-relaxed pr-2">
+                    {joke?.setup || "Loading funny content..."}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center justify-between border-t border-border/40 pt-4 text-xs text-muted-foreground">
+                <span>Hover or click to reveal the punchline...</span>
+                <span className="text-purple-400 text-sm font-semibold animate-bounce">🤫</span>
+              </div>
+            </div>
+
+            {/* Back Card (Punchline) */}
+            <div className="absolute w-full h-full backface-hidden rotate-y-180 p-6 rounded-2xl bg-gradient-to-br from-violet-950/20 via-purple-900/10 to-background border border-border shadow-xl backdrop-blur-md flex flex-col justify-between">
+              <div className="space-y-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  😆 Aha! The Answer
+                </span>
+                <p className="text-base md:text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 leading-relaxed">
+                  {joke?.punchline || "Loading response..."}
+                </p>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/40 pt-3">
+                <span className="text-xs text-muted-foreground">Laughter is the best tutor!</span>
+                <button
+                  onClick={handleGetAnotherJoke}
+                  disabled={loadingJoke}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-indigo-500/20 transition-all duration-300 disabled:opacity-50"
+                >
+                  {loadingJoke ? "Loading..." : "Get Another Joke 🔄"}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}

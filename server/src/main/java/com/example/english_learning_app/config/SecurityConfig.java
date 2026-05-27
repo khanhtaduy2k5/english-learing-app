@@ -39,7 +39,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET,
                 "/api/levels/**",
                 "/api/units/**",
-                "/api/lessons/**",
+                "/api/public/**",
                 "/api/grammar/**",
                 "/api/reading/**",
                 "/api/exams/**"
