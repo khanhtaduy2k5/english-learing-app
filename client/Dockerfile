@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 # npm ci is faster and reproducible (uses exact versions from lock file)
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # ── Stage 2: Build ────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder

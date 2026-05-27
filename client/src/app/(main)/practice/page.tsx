@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 type PracticeMode = "speaking" | "listening" | "writing" | "reading";
 
@@ -65,28 +62,6 @@ const recentSessions = [
 
 export default function PracticePage() {
   const [activeMode, setActiveMode] = useState<PracticeMode | null>(null);
-  const [lessons, setLessons] = useState<any[]>([]);
-  const [loadingLessons, setLoadingLessons] = useState(false);
-
-  useEffect(() => {
-    if (!activeMode) {
-      setLessons([]);
-      return;
-    }
-    const fetchSkillLessons = async () => {
-      setLoadingLessons(true);
-      try {
-        const data = await apiClient.getLessons({ skill: activeMode });
-        setLessons(data || []);
-      } catch (err) {
-        console.error("Failed to fetch lessons for practice skill:", activeMode, err);
-        setLessons([]);
-      } finally {
-        setLoadingLessons(false);
-      }
-    };
-    fetchSkillLessons();
-  }, [activeMode]);
 
   return (
     <div className="p-8 text-slate-800 dark:text-slate-100">
@@ -140,60 +115,7 @@ export default function PracticePage() {
         ))}
       </div>
 
-      {/* Expanded Skill Lessons Sub-list */}
-      {activeMode && (
-        <div className="mb-10 p-6 rounded-3xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-xl shadow-indigo-500/5 dark:shadow-none animate-fadeIn">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
-            <div>
-              <h3 className="text-slate-900 dark:text-white font-bold text-base flex items-center gap-2">
-                🎯 Bài tập thực hành sẵn có ({practiceModes.find(m => m.id === activeMode)?.title})
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 text-xs mt-0.5">Chọn một bài học thực hành được đồng bộ trực tiếp từ máy chủ.</p>
-            </div>
-            <span className="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
-              {lessons.length} bài học
-            </span>
-          </div>
 
-          {loadingLessons ? (
-            <div className="flex items-center justify-center py-10">
-              <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : lessons.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-500 text-sm">Không tìm thấy bài học phù hợp cho kỹ năng này.</p>
-              <Link href="/lessons" className="text-indigo-400 text-xs font-bold hover:underline mt-2 inline-block">
-                Khám phá tất cả các bài học →
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {lessons.map((lesson) => (
-                <Link href={`/lessons/${lesson.id}`} key={lesson.id} className="block group">
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 group-hover:bg-slate-100 dark:group-hover:bg-white/[0.08] transition-all flex justify-between items-center gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-indigo-500/25 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25 rounded">
-                          {lesson.level}
-                        </span>
-                        {lesson.duration && (
-                          <span className="text-[10px] text-slate-500">⏱️ {lesson.duration} phút</span>
-                        )}
-                      </div>
-                      <h4 className="text-slate-900 dark:text-white font-bold text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {lesson.title}
-                      </h4>
-                    </div>
-                    <span className="text-xs font-bold text-indigo-400 shrink-0 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                      Làm bài <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
       {/* Daily Challenges */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-5">

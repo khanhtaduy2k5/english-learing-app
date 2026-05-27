@@ -4,7 +4,6 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { useAuthStore } from "@/store/authStore";
-import { Lesson, LessonSummary } from "@/types";
 
 const API_BASE_URL =
   typeof window !== "undefined"
@@ -111,28 +110,6 @@ class ApiClient {
 
   async getUnitDetail(id: string) {
     const response = await this.client.get<any>(`/api/units/${id}`);
-    return response.data;
-  }
-
-  // Lessons
-  async getLessons(params?: {
-    level?: string;
-    unitId?: string;
-    skill?: string;
-  }) {
-    const response = await this.client.get<LessonSummary[]>("/api/lessons", {
-      params,
-    });
-    return response.data;
-  }
-
-  async getLessonDetail(id: string) {
-    const response = await this.client.get<Lesson>(`/api/lessons/${id}`);
-    return response.data;
-  }
-
-  async getLessonQuiz(id: string) {
-    const response = await this.client.get<any>(`/api/lessons/${id}/quiz`);
     return response.data;
   }
 

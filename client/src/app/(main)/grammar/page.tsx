@@ -18,6 +18,12 @@ export default function GrammarPage() {
   const [loading, setLoading] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedLevel]);
   
   // Quiz state
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -46,6 +52,12 @@ export default function GrammarPage() {
 
   const filteredRules = rules.filter(
     (r) => selectedLevel === "All" || r.level === selectedLevel
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredRules.length / itemsPerPage));
+  const paginatedRules = filteredRules.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const startQuiz = (ruleId: string) => {
@@ -135,11 +147,12 @@ export default function GrammarPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <h3 className="text-lg font-bold text-white mb-2">No Grammar Rules Found</h3>
-          <p className="text-slate-400 text-sm">Please seed the database table or change the filter level.</p>
+          <p className="text-slate-400 text-sm">Please change the filter level or check back later.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {filteredRules.map((rule) => {
+        <>
+          <div className="grid grid-cols-1 gap-4">
+          {paginatedRules.map((rule) => {
             const dc = difficultyConfig[rule.level] || { color: "text-slate-400", bg: "bg-white/10", border: "border-white/5" };
             const isExpanded = expandedId === rule.id;
 
@@ -317,6 +330,59 @@ export default function GrammarPage() {
             );
           })}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 mt-6">
+            <p className="text-xs text-slate-400">
+              Trang {currentPage} / {totalPages}
+            </p>
+
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.max(1, prev - 1))
+                }
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg text-xs font-semibold border border-white/10 bg-white/5 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+              >
+                Trước
+              </button>
+
+              <div className="flex items-center gap-1 flex-wrap justify-center">
+                {Array.from(
+                  { length: totalPages },
+                  (_, index) => index + 1,
+                ).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`min-w-9 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                      currentPage === page
+                        ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-600/20"
+                        : "bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg text-xs font-semibold border border-white/10 bg-white/5 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

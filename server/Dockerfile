@@ -3,14 +3,14 @@ FROM maven:3.9.4-eclipse-temurin-21 AS deps
 WORKDIR /workspace
 # Only copy pom.xml first → this layer is cached until pom.xml changes
 COPY pom.xml ./
-RUN mvn -B -DskipTests dependency:resolve dependency:resolve-plugins
+RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests dependency:resolve dependency:resolve-plugins
 
 # ── Stage 2: Build ────────────────────────────────────────────────────────────
 FROM deps AS build
 # Copy source (invalidates only this layer when src changes)
 COPY src ./src
 # Build with layered JAR enabled for optimal Docker caching
-RUN mvn -B -DskipTests package -Dspring-boot.repackage.layered=true
+RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests package -Dspring-boot.repackage.layered=true
 
 # ── Stage 3: Extract layers ───────────────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine AS extractor
