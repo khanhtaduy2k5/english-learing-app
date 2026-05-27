@@ -49,7 +49,12 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
-        if (error.response?.status === 401) {
+        const requestPath = error.config?.url || "";
+        const isAuthEndpoint =
+          requestPath.includes("/api/auth/login") ||
+          requestPath.includes("/api/auth/register");
+
+        if (error.response?.status === 401 && !isAuthEndpoint) {
           if (typeof window !== "undefined") {
             useAuthStore.getState().logout();
             window.location.href = "/login";

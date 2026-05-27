@@ -21,6 +21,7 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # ── Stage 4: Runtime (smallest possible) ─────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+RUN apk add --no-cache curl
 # Copy layered JAR pieces — unchanged layers (deps) are cached by Docker
 COPY --from=extractor /workspace/dependencies/ ./
 COPY --from=extractor /workspace/spring-boot-loader/ ./
