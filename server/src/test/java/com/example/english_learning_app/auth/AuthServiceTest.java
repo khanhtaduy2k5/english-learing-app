@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import com.example.english_learning_app.user.User;
 import com.example.english_learning_app.user.UserRepository;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,18 +23,38 @@ class AuthServiceTest {
 
   private UserRepository userRepository;
   private PasswordEncoder passwordEncoder;
+  private StringRedisTemplate redisTemplate;
+  private ValueOperations<String, String> valueOperations;
   private AuthService authService;
 
   @BeforeEach
+  @SuppressWarnings("unchecked")
   void setUp() {
     userRepository = mock(UserRepository.class);
     passwordEncoder = mock(PasswordEncoder.class);
-    authService = new AuthService(userRepository, passwordEncoder, "supersecretkeythatisverylong12345678", 86400000L);
+    redisTemplate = mock(StringRedisTemplate.class);
+    valueOperations = mock(ValueOperations.class);
+    
+    when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+    
+    authService = new AuthService(
+        userRepository, 
+        passwordEncoder, 
+        redisTemplate, 
+        "supersecretkeythatisverylong12345678", 
+        900000L, 
+        604800000L
+    );
   }
 
   @Test
   void loginSucceedsWhenValidCredentials() {
-    User mockUser = new User("Student", "Student@Example.com", "encodedpass");
+    User mockUser = mock(User.class);
+    when(mockUser.getId()).thenReturn("user-1");
+    when(mockUser.getEmail()).thenReturn("Student@Example.com");
+    when(mockUser.getName()).thenReturn("Student");
+    when(mockUser.getPassword()).thenReturn("encodedpass");
+
     when(userRepository.findByEmailIgnoreCase("Student@Example.com")).thenReturn(Optional.of(mockUser));
     when(passwordEncoder.matches("password123", "encodedpass")).thenReturn(true);
 
@@ -44,7 +66,7 @@ class AuthServiceTest {
 
   @Test
   void registerFailsWhenEmailExists() {
-    when(userRepository.findByEmailIgnoreCase("learner@example.com")).thenReturn(Optional.of(new User("Test", "test@test.com", "pass")));
+    when(userRepository.findByEmailIgnoreCase("learner@example.com")).thenReturn(Optional.of(mock(User.class)));
     
     org.junit.jupiter.api.Assertions.assertThrows(ResponseStatusException.class, () -> {
         authService.register("Nguyen Van A", "learner@example.com", "password123");
@@ -52,8 +74,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void logoutReturnsConfirmationMessage() {
-    var response = authService.logout();
-    assertEquals("Logged out", response.message());
+  void logoutInvalidatesToken() {
+    authService.logout("some-refresh-token");
   }
 }

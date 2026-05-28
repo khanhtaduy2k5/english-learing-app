@@ -208,7 +208,7 @@ export default function SettingsPage() {
                     <input
                       type="text"
                       defaultValue={user?.name || ""}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
                     <input
                       type="email"
                       defaultValue={user?.email || ""}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     />
                   </div>
                   <div>
@@ -228,7 +228,7 @@ export default function SettingsPage() {
                         onChange={(e) => setDailyGoal(Number(e.target.value))}
                         className="flex-1 accent-indigo-500"
                       />
-                      <span className="text-white font-bold text-lg w-20 text-right">{dailyGoal} min</span>
+                      <span className="text-slate-900 dark:text-white font-bold text-lg w-20 text-right">{dailyGoal} min</span>
                     </div>
                   </div>
                 </div>
@@ -344,12 +344,12 @@ export default function SettingsPage() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500/50 transition-all appearance-none"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500/50 transition-all appearance-none"
                 >
-                  <option value="en" className="bg-[#0a0f1e]">English</option>
-                  <option value="vi" className="bg-[#0a0f1e]">Tiếng Việt</option>
-                  <option value="ja" className="bg-[#0a0f1e]">日本語</option>
-                  <option value="ko" className="bg-[#0a0f1e]">한국어</option>
+                  <option value="en" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white">English</option>
+                  <option value="vi" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white">Tiếng Việt</option>
+                  <option value="ja" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white">日本語</option>
+                  <option value="ko" className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white">한국어</option>
                 </select>
               </div>
             </div>
@@ -371,7 +371,7 @@ export default function SettingsPage() {
                       <input
                         type="password"
                         placeholder={f.placeholder}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                       />
                     </div>
                   ))}

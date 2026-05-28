@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { apiClient } from "@/lib/api";
 
 const menuItems = [
   {
@@ -34,12 +33,30 @@ const menuItems = [
     ),
   },
   {
+    label: "Reading",
+    href: "/reading",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    ),
+  },
+  {
     label: "Practice",
     href: "/practice",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Listening",
+    href: "/listening",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
       </svg>
     ),
   },
@@ -100,14 +117,6 @@ const menuItems = [
   },
 ];
 
-interface RadioStation {
-  name: string;
-  url: string;
-  favicon: string;
-  country: string;
-  tags: string;
-}
-
 interface SidebarProps {
   userName?: string;
   userEmail?: string;
@@ -119,87 +128,6 @@ interface SidebarProps {
 export default function Sidebar({ userName, userEmail, onLogout, isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  // Radio Background Player states
-  const [stations, setStations] = useState<RadioStation[]>([]);
-  const [activeStationIdx, setActiveStationIdx] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.5);
-  const [showStationList, setShowStationList] = useState(false);
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Fetch radio stations on mount
-  useEffect(() => {
-    async function loadRadio() {
-      try {
-        const data = await apiClient.getEnglishRadioStations();
-        setStations(data);
-      } catch (err) {
-        console.error("Failed to load radio stations:", err);
-      }
-    }
-    loadRadio();
-  }, []);
-
-  // Initialize Audio Object
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      audioRef.current = new Audio();
-    }
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-      }
-    };
-  }, []);
-
-  // Control Audio Playback
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying && stations[activeStationIdx]) {
-      const targetUrl = stations[activeStationIdx].url;
-      if (audio.src !== targetUrl) {
-        audio.src = targetUrl;
-      }
-      audio.volume = volume;
-      
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.error("Playback interrupted or blocked by browser:", err);
-          setIsPlaying(false);
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying, activeStationIdx, stations, volume]);
-
-  // Adjust volume
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  const togglePlay = () => {
-    if (stations.length === 0) return;
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleStationChange = (idx: number) => {
-    setActiveStationIdx(idx);
-    setShowStationList(false);
-    // Auto play if already playing
-    if (isPlaying) {
-      setIsPlaying(false);
-      setTimeout(() => setIsPlaying(true), 200);
-    }
-  };
 
   return (
     <aside
@@ -261,147 +189,6 @@ export default function Sidebar({ userName, userEmail, onLogout, isCollapsed, on
         })}
       </nav>
 
-      {/* English Radio Background Player Widget */}
-      {stations.length > 0 && (
-        <div className="relative border-t border-border/40 py-3">
-          {isCollapsed ? (
-            /* Collapsed view: just a spinning music disk button */
-            <div className="flex justify-center">
-              <button
-                onClick={togglePlay}
-                className={`w-10 h-10 rounded-full flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 hover:border-indigo-500/40 text-indigo-400 shadow-lg relative transition-all duration-300 ${
-                  isPlaying ? "animate-spin" : ""
-                }`}
-                style={{ animationDuration: "4s" }}
-                title={`Listen Background Radio: ${stations[activeStationIdx]?.name}`}
-              >
-                {isPlaying ? (
-                  <span className="text-sm">📻</span>
-                ) : (
-                  <span className="text-sm">▶️</span>
-                )}
-                {isPlaying && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border border-sidebar animate-ping"></span>
-                )}
-              </button>
-            </div>
-          ) : (
-            /* Expanded view: beautiful glassmorphism audio player controller */
-            <div className="mx-3 p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/10 dark:border-indigo-500/20 shadow-xl space-y-3.5 relative overflow-hidden group">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full bg-indigo-400 ${isPlaying ? "animate-pulse" : ""}`}></span>
-                  English Radio
-                </span>
-                
-                {/* Audio Wave Visualizer Animation */}
-                {isPlaying && (
-                  <div className="flex items-end gap-0.5 h-3 select-none">
-                    <span className="w-[2px] bg-indigo-400 animate-[bounce_0.8s_infinite] h-full" style={{ animationDelay: "0.1s" }}></span>
-                    <span className="w-[2px] bg-indigo-400 animate-[bounce_0.8s_infinite] h-2/3" style={{ animationDelay: "0.3s" }}></span>
-                    <span className="w-[2px] bg-indigo-400 animate-[bounce_0.8s_infinite] h-4/5" style={{ animationDelay: "0.5s" }}></span>
-                  </div>
-                )}
-              </div>
-
-              {/* Station Selection Dropdown Toggle */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowStationList(!showStationList)}
-                  className="w-full px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/25 flex items-center justify-between transition-all duration-300 text-left"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-5 h-5 rounded bg-indigo-500/20 flex-shrink-0 flex items-center justify-center text-xs">
-                      {stations[activeStationIdx]?.favicon ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img 
-                          src={stations[activeStationIdx].favicon} 
-                          alt="" 
-                          className="w-full h-full object-cover rounded" 
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} 
-                        />
-                      ) : (
-                        "📻"
-                      )}
-                    </div>
-                    <span className="text-xs font-semibold text-foreground truncate max-w-[130px]">
-                      {stations[activeStationIdx]?.name || "Select station"}
-                    </span>
-                  </div>
-                  <span className="text-muted-foreground/60">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </span>
-                </button>
-
-                {/* Floating station list */}
-                {showStationList && (
-                  <div className="absolute bottom-12 left-0 right-0 max-h-40 overflow-y-auto rounded-xl bg-background border border-border shadow-2xl z-50 p-1.5 scrollbar-thin animate-fade-in space-y-0.5">
-                    {stations.map((st, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleStationChange(i)}
-                        className={`w-full px-2.5 py-2 rounded-lg text-left text-xs truncate flex items-center gap-2 transition-all ${
-                          activeStationIdx === i 
-                            ? "bg-indigo-500/10 text-indigo-400 font-bold" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                        }`}
-                      >
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-white/5 px-1 rounded">
-                          {st.country}
-                        </span>
-                        <span className="truncate">{st.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Play & Volume controls */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={togglePlay}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md flex-shrink-0 transition-all ${
-                    isPlaying 
-                      ? "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20" 
-                      : "bg-indigo-500 text-white hover:bg-indigo-400 active:scale-95"
-                  }`}
-                >
-                  {isPlaying ? (
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 pl-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </button>
-
-                {/* Volume Slider icon + bar */}
-                <div className="flex-1 flex items-center gap-1.5">
-                  <span className="text-muted-foreground hover:text-foreground transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={volume}
-                    onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* User Profile Area */}
       <div className="px-3 py-4 border-t border-border relative">
         {/* Transparent backdrop to click outside and close menu */}
@@ -418,7 +205,7 @@ export default function Sidebar({ userName, userEmail, onLogout, isCollapsed, on
         {/* Floating User Context Menu */}
         {showUserMenu && (
           <div
-            className={`absolute bottom-20 p-2 rounded-2xl bg-white dark:bg-sidebar/95 backdrop-blur-xl border border-border shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
+            className={`absolute bottom-20 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
               isCollapsed ? "left-4 w-44 shadow-indigo-500/5" : "left-3 right-3"
             }`}
           >
@@ -426,7 +213,7 @@ export default function Sidebar({ userName, userEmail, onLogout, isCollapsed, on
               <Link
                 href="/settings"
                 onClick={() => setShowUserMenu(false)}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all duration-200"
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
               >
                 <span className="text-muted-foreground group-hover:text-foreground">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -440,7 +227,7 @@ export default function Sidebar({ userName, userEmail, onLogout, isCollapsed, on
               <Link
                 href="/help"
                 onClick={() => setShowUserMenu(false)}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all duration-200"
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
               >
                 <span className="text-muted-foreground group-hover:text-foreground">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

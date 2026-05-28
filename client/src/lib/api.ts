@@ -43,22 +43,74 @@ class ApiClient {
       },
       (error) => Promise.reject(error),
     );
-
     // Response interceptor
+    let isRefreshing = false;
+    let failedQueue: any[] = [];
+
+    const processQueue = (err: any, token: string | null = null) => {
+      failedQueue.forEach((prom) => {
+        if (err) {
+          prom.reject(err);
+        } else {
+          prom.resolve(token);
+        }
+      });
+      failedQueue = [];
+    };
+
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
-        const requestPath = error.config?.url || "";
+      async (error: AxiosError) => {
+        const originalRequest = error.config;
+        if (!originalRequest) {
+          return Promise.reject(error);
+        }
+
+        const requestPath = originalRequest.url || "";
         const isAuthEndpoint =
           requestPath.includes("/api/auth/login") ||
-          requestPath.includes("/api/auth/register");
+          requestPath.includes("/api/auth/register") ||
+          requestPath.includes("/api/auth/refresh");
 
         if (error.response?.status === 401 && !isAuthEndpoint) {
-          if (typeof window !== "undefined") {
-            useAuthStore.getState().logout();
-            window.location.href = "/login";
+          if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                return this.client(originalRequest);
+              })
+              .catch((err) => Promise.reject(err));
+          }
+
+          isRefreshing = true;
+
+          try {
+            const refreshResponse = await this.client.post("/api/auth/refresh");
+            const newAccessToken = refreshResponse.data?.token;
+
+            if (newAccessToken) {
+              if (typeof window !== "undefined") {
+                useAuthStore.getState().setToken(newAccessToken);
+              }
+
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              processQueue(null, newAccessToken);
+              return this.client(originalRequest);
+            }
+          } catch (refreshError) {
+            processQueue(refreshError, null);
+            if (typeof window !== "undefined") {
+              useAuthStore.getState().logout();
+              window.location.href = "/login";
+            }
+            return Promise.reject(refreshError);
+          } finally {
+            isRefreshing = false;
           }
         }
+
         return Promise.reject(error);
       },
     );
