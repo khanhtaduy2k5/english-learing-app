@@ -12,3 +12,6 @@ ERRORS.md
 
 # Deploy secrets
 deploy/.env.production
+
+*.txt
+

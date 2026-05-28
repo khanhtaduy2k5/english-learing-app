@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
-import FloatingDictionary from "@/components/FloatingDictionary";
-import { BookOpen, Award, CheckCircle, HelpCircle } from "lucide-react";
+
+import { BookOpen, Award, CheckCircle } from "lucide-react";
 
 interface ReadingPassage {
   id: string;
@@ -63,14 +63,7 @@ export default function ReadingPage() {
     null,
   );
 
-  // Dictionary Popup states
-  const [selectedWord, setSelectedWord] = useState("");
-  const [definition, setDefinition] = useState<any>(null);
-  const [loadingDef, setLoadingDef] = useState(false);
-  const [popupPosition, setPopupPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+
 
   // Quiz states
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
@@ -92,48 +85,7 @@ export default function ReadingPage() {
     loadData();
   }, []);
 
-  // Text selection handler for dictionary popup
-  const handleMouseUp = async (e: React.MouseEvent) => {
-    const selection = window.getSelection();
-    const word = selection ? selection.toString().trim() : "";
-    if (!word || word.includes(" ") || word.length < 2) {
-      setSelectedWord("");
-      setPopupPosition(null);
-      return;
-    }
-    const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "");
-    if (!cleanWord || cleanWord.length < 2) return;
 
-    setSelectedWord(cleanWord);
-    setLoadingDef(true);
-    setPopupPosition({
-      x: Math.min(window.innerWidth - 340, Math.max(16, e.clientX - 140)),
-      y: e.clientY + window.scrollY - 185,
-    });
-
-    try {
-      const res = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord.toLowerCase()}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) setDefinition(data[0]);
-      }
-    } catch {
-      setDefinition(null);
-    } finally {
-      setLoadingDef(false);
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setSelectedWord("");
-      setPopupPosition(null);
-    };
-    if (selectedWord) window.addEventListener("mousedown", handleClickOutside);
-    return () => window.removeEventListener("mousedown", handleClickOutside);
-  }, [selectedWord]);
 
   const handleStartQuiz = () => {
     setQuizAnswers({});
@@ -179,7 +131,7 @@ export default function ReadingPage() {
   // Reading Passage detail view
   if (activePassage) {
     return (
-      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 relative selection:bg-indigo-500/30 selection:text-white">
+      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 relative">
         <button
           onClick={() => setActivePassage(null)}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
@@ -203,30 +155,16 @@ export default function ReadingPage() {
           </h1>
         </div>
 
-        {/* Highlight translation notice */}
-        <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center gap-3 text-xs text-indigo-500 dark:text-indigo-300">
-          <HelpCircle className="w-4 h-4 flex-shrink-0" />
-          <p>
-            Bôi đen một từ bất kỳ trong bài viết để mở Từ điển học thuật thông
-            minh, tra nghĩa Tiếng Việt & nghe phát âm chuẩn.
-          </p>
-        </div>
+
 
         {/* Main Passage Text */}
         <div
-          className="text-base md:text-lg font-serif text-foreground leading-relaxed space-y-6 pt-6 border-t border-border whitespace-pre-wrap selection:bg-indigo-500/40"
-          onMouseUp={handleMouseUp}
+          className="text-base md:text-lg font-serif text-foreground leading-relaxed space-y-6 pt-6 border-t border-border whitespace-pre-wrap"
         >
           {activePassage.passageText}
         </div>
 
-        {/* Dynamic Dictionary Popup */}
-        <FloatingDictionary
-          selectedWord={selectedWord}
-          popupPosition={popupPosition}
-          definition={definition}
-          loadingDef={loadingDef}
-        />
+
 
         {/* Comprehension Quiz section */}
         {activePassage.questions && activePassage.questions.length > 0 && (

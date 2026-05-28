@@ -174,7 +174,7 @@ export default function WritingPage() {
     setShowCorrected(false);
 
     try {
-      const res = await fetch("/api/writing-feedback", {
+      const res = await fetch("/api/writing/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, taskType, targetLevel }),

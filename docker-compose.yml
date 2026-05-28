@@ -43,7 +43,7 @@ services:
     env_file:
       - ./server/.env
     environment:
-p      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/english_learning
     depends_on:

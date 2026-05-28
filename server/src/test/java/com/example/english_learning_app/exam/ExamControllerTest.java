@@ -25,8 +25,8 @@ class ExamControllerTest {
 
     @Test
     void shouldReturnAllExams() {
-        Exam exam1 = new Exam("e1", "IELTS", "International English Language Testing System", "🇬🇧", "Desc", new HashMap<>(), new ArrayList<>(), new ArrayList<>(), OffsetDateTime.now());
-        Exam exam2 = new Exam("e2", "TOEIC", "Test of English for International Communication", "🇺🇸", "Desc", new HashMap<>(), new ArrayList<>(), new ArrayList<>(), OffsetDateTime.now());
+        Exam exam1 = new Exam("e1", "IELTS", "International English Language Testing System", "🇬🇧", "Desc", (Object) new HashMap<>(), (Object) new HashMap<>(), (Object) new HashMap<>(), OffsetDateTime.now());
+        Exam exam2 = new Exam("e2", "TOEIC", "Test of English for International Communication", "🇺🇸", "Desc", (Object) new HashMap<>(), (Object) new HashMap<>(), (Object) new HashMap<>(), OffsetDateTime.now());
         
         when(examService.getAllExams()).thenReturn(Arrays.asList(exam1, exam2));
 
@@ -38,7 +38,7 @@ class ExamControllerTest {
 
     @Test
     void shouldReturnExamById_whenFound() {
-        Exam exam = new Exam("e1", "IELTS", "International English Language Testing System", "🇬🇧", "Desc", new HashMap<>(), new ArrayList<>(), new ArrayList<>(), OffsetDateTime.now());
+        Exam exam = new Exam("e1", "IELTS", "International English Language Testing System", "🇬🇧", "Desc", (Object) new HashMap<>(), (Object) new HashMap<>(), (Object) new HashMap<>(), OffsetDateTime.now());
         when(examService.getExam("e1")).thenReturn(Optional.of(exam));
 
         ResponseEntity<Exam> response = examController.getExam("e1");

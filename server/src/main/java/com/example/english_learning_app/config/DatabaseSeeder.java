@@ -4,8 +4,6 @@ import com.example.english_learning_app.level.Level;
 import com.example.english_learning_app.level.LevelRepository;
 import com.example.english_learning_app.unit.Unit;
 import com.example.english_learning_app.unit.UnitRepository;
-import com.example.english_learning_app.grammar.GrammarRule;
-import com.example.english_learning_app.grammar.GrammarRuleRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,33 +22,32 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private final LevelRepository levelRepository;
     private final UnitRepository unitRepository;
-    private final GrammarRuleRepository grammarRuleRepository;
     private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        if (levelRepository.count() > 0 && !hasLegacySeedData()) {
-            log.info("Database already seeded. Skipping seeder.");
-            return;
-        }
-
-        if (hasLegacySeedData()) {
-            log.info("Legacy seed data detected (A1/A2/B1 only). Re-seeding with current dataset...");
-            grammarRuleRepository.deleteAllInBatch();
-            unitRepository.deleteAllInBatch();
-            levelRepository.deleteAllInBatch();
-        }
-
-        log.info("Starting database seeding...");
+        log.info("Starting database seeding (Smart Upsert)...");
 
         // 1. SEED LEVELS
         log.info("Seeding Levels...");
-        Level a1 = new Level("A1", "Beginner", "Super basic vocabulary and daily greetings.", OffsetDateTime.now());
-        Level a2 = new Level("A2", "Elementary", "Simple tasks, personal info, and routine activities.", OffsetDateTime.now());
-        Level b1 = new Level("B1", "Intermediate", "Work, school, leisure, and expressing opinions.", OffsetDateTime.now());
-        
-        levelRepository.saveAll(Arrays.asList(a1, a2, b1));
+        List<Level> levels = Arrays.asList(
+            new Level("A1", "Beginner", "Super basic vocabulary and daily greetings.", OffsetDateTime.now()),
+            new Level("A2", "Elementary", "Simple tasks, personal info, and routine activities.", OffsetDateTime.now()),
+            new Level("B1", "Intermediate", "Work, school, leisure, and expressing opinions.", OffsetDateTime.now())
+        );
+
+        for (Level level : levels) {
+            Optional<Level> existingLevelOpt = levelRepository.findById(level.getLevel());
+            if (existingLevelOpt.isPresent()) {
+                Level existingLevel = existingLevelOpt.get();
+                existingLevel.setName(level.getName());
+                existingLevel.setDescription(level.getDescription());
+                levelRepository.save(existingLevel);
+            } else {
+                levelRepository.save(level);
+            }
+        }
 
         // 2. SEED UNITS
         log.info("Seeding Units...");
@@ -67,68 +64,28 @@ public class DatabaseSeeder implements CommandLineRunner {
             new TypeReference<Map<String, Object>>() {}
         );
 
-        Unit unit1 = new Unit("unit-1", "A1", 1, "Getting Started", "Learn how to greet people and introduce yourself.", "👋", checkpointA1, OffsetDateTime.now());
-        Unit unit2 = new Unit("unit-2", "A2", 2, "Everyday Routine", "Talk about daily habits, lifestyle and schedules.", "☕", checkpointA2, OffsetDateTime.now());
-        Unit unit3 = new Unit("unit-3", "B1", 3, "Dream Destinations", "Express your hopes, travel plans and cultural experiences.", "✈️", checkpointB1, OffsetDateTime.now());
-
-        unitRepository.saveAll(Arrays.asList(unit1, unit2, unit3));
-
-        // 3. SEED GRAMMAR RULES
-        log.info("Seeding Grammar Rules...");
-        List<Object> grExamples1 = objectMapper.readValue(
-            "[{\"en\":\"I play tennis on Sundays.\",\"vi\":\"Tôi chơi tennis vào các ngày Chủ Nhật.\"},{\"en\":\"She works at a bank.\",\"vi\":\"Cô ấy làm việc tại ngân hàng.\"}]",
-            new TypeReference<List<Object>>() {}
-        );
-        List<Object> grQuestions1 = objectMapper.readValue(
-            "[{\"question\":\"He _____ (like) chocolate.\",\"options\":[\"like\",\"likes\",\"liking\"],\"correctIndex\":1}]",
-            new TypeReference<List<Object>>() {}
-        );
-        GrammarRule gr1 = new GrammarRule("gr-rule-1", "A1", "Present Simple Tense", 
-            "Use the present simple to express habits, general truths, and unchanging situations.",
-            grExamples1, grQuestions1, OffsetDateTime.now()
+        List<Unit> units = Arrays.asList(
+            new Unit("unit-1", "A1", 1, "Getting Started", "Learn how to greet people and introduce yourself.", "👋", checkpointA1, OffsetDateTime.now()),
+            new Unit("unit-2", "A2", 2, "Everyday Routine", "Talk about daily habits, lifestyle and schedules.", "☕", checkpointA2, OffsetDateTime.now()),
+            new Unit("unit-3", "B1", 3, "Dream Destinations", "Express your hopes, travel plans and cultural experiences.", "✈️", checkpointB1, OffsetDateTime.now())
         );
 
-        List<Object> grExamples2 = objectMapper.readValue(
-            "[{\"en\":\"We visited Paris last year.\",\"vi\":\"Chúng tôi đã đến thăm Paris năm ngoái.\"},{\"en\":\"She did not call me.\",\"vi\":\"Cô ấy đã không gọi cho tôi.\"}]",
-            new TypeReference<List<Object>>() {}
-        );
-        List<Object> grQuestions2 = objectMapper.readValue(
-            "[{\"question\":\"They _____ (go) to the cinema yesterday.\",\"options\":[\"go\",\"went\",\"gone\"],\"correctIndex\":1}]",
-            new TypeReference<List<Object>>() {}
-        );
-        GrammarRule gr2 = new GrammarRule("gr-rule-2", "A2", "Past Simple Tense", 
-            "Use the past simple to talk about completed actions in a time before now.",
-            grExamples2, grQuestions2, OffsetDateTime.now()
-        );
-
-        List<Object> grExamples3 = objectMapper.readValue(
-            "[{\"en\":\"If we leave now, we will catch the train.\",\"vi\":\"Nếu chúng ta đi ngay bây giờ, chúng ta sẽ kịp chuyến tàu.\"},{\"en\":\"She will feel better if she rests.\",\"vi\":\"Cô ấy sẽ cảm thấy tốt hơn nếu cô ấy nghỉ ngơi.\"}]",
-            new TypeReference<List<Object>>() {}
-        );
-        List<Object> grQuestions3 = objectMapper.readValue(
-            "[{\"question\":\"If it rains, we _____ stay at home.\",\"options\":[\"will\",\"would\",\"gone\"],\"correctIndex\":0}]",
-            new TypeReference<List<Object>>() {}
-        );
-        GrammarRule gr3 = new GrammarRule("gr-rule-3", "B1", "First Conditional", 
-            "Use the first conditional to talk about real future possibilities and their likely results.",
-            grExamples3, grQuestions3, OffsetDateTime.now()
-        );
-
-        grammarRuleRepository.saveAll(Arrays.asList(gr1, gr2, gr3));
-
-        log.info("Database seeding successfully completed!");
-    }
-
-    private boolean hasLegacySeedData() {
-        var levels = levelRepository.findAll();
-        if (levels.size() != 3) {
-            return false;
+        for (Unit unit : units) {
+            Optional<Unit> existingUnitOpt = unitRepository.findById(unit.getId());
+            if (existingUnitOpt.isPresent()) {
+                Unit existingUnit = existingUnitOpt.get();
+                existingUnit.setLevel(unit.getLevel());
+                existingUnit.setNumber(unit.getNumber());
+                existingUnit.setTitle(unit.getTitle());
+                existingUnit.setTheme(unit.getTheme());
+                existingUnit.setEmoji(unit.getEmoji());
+                existingUnit.setCheckpoint(unit.getCheckpoint());
+                unitRepository.save(existingUnit);
+            } else {
+                unitRepository.save(unit);
+            }
         }
 
-        var levelSet = levels.stream()
-            .map(Level::getLevel)
-            .collect(java.util.stream.Collectors.toSet());
-
-        return levelSet.containsAll(java.util.Set.of("A1", "A2", "B1"));
+        log.info("Database seeding successfully completed (Smart Upsert)!");
     }
 }

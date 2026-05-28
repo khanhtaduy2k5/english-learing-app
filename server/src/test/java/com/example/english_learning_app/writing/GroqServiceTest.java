@@ -26,7 +26,19 @@ class GroqServiceTest {
     @BeforeEach
     void setUp() {
         restTemplate = mock(RestTemplate.class);
-        groqService = new GroqService(restTemplate, new ObjectMapper());
+        var logRepository = mock(WritingFeedbackLogRepository.class);
+        var redisTemplate = mock(org.springframework.data.redis.core.StringRedisTemplate.class);
+        var valueOperations = mock(org.springframework.data.redis.core.ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        // Mock Security Context
+        var securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
+        var authentication = mock(org.springframework.security.core.Authentication.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getName()).thenReturn("mock-user");
+        org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+
+        groqService = new GroqService(restTemplate, new ObjectMapper(), logRepository, redisTemplate);
         ReflectionTestUtils.setField(groqService, "apiKey", "test-api-key");
         ReflectionTestUtils.setField(groqService, "apiUrl", "https://example.test/chat");
         ReflectionTestUtils.setField(groqService, "model", "test-model");

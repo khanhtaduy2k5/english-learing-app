@@ -35,11 +35,58 @@ export default function ExamsPage() {
     loadExams();
   }, []);
 
+  const getQuestionCount = (examData: any): number => {
+    if (!examData) return 0;
+    if (Array.isArray(examData)) return examData.length;
+    if (examData.sections && Array.isArray(examData.sections)) {
+      return examData.sections.reduce((acc: number, sec: any) => {
+        return acc + (Array.isArray(sec.questions) ? sec.questions.length : 0);
+      }, 0);
+    }
+    return 0;
+  };
+
   const activeExam = exams.find((e) => e.id === activeExamId);
   const activeQuestions = activeExam
-    ? examMode === "quick"
-      ? activeExam.quickExam
-      : activeExam.fullExam
+    ? (() => {
+        const examData = examMode === "quick" ? activeExam.quickExam : activeExam.fullExam;
+        if (!examData) return [];
+        
+        // Support direct array format (backward compatibility)
+        if (Array.isArray(examData)) {
+          return examData.map((q: any) => ({
+            question: q.question || q.prompt || "",
+            options: Array.isArray(q.options) ? q.options : [q.answer || q.correctText || ""],
+            answer: q.answer || q.correctText || "",
+            explanation: q.explanation || ""
+          }));
+        }
+
+        // Support structured object format with sections (Postgres production)
+        if (examData.sections && Array.isArray(examData.sections)) {
+          const allQuestions: any[] = [];
+          examData.sections.forEach((sec: any) => {
+            if (sec.questions && Array.isArray(sec.questions)) {
+              sec.questions.forEach((q: any) => {
+                const ans = q.correctText || q.answer || "";
+                let opts = q.options;
+                if (!Array.isArray(opts) || opts.length === 0) {
+                  opts = [ans];
+                }
+                allQuestions.push({
+                  question: q.prompt || q.question || "",
+                  options: opts,
+                  answer: ans,
+                  explanation: q.explanation || ""
+                });
+              });
+            }
+          });
+          return allQuestions;
+        }
+
+        return [];
+      })()
     : [];
 
   const startExam = (examId: string, mode: "quick" | "full") => {
@@ -193,7 +240,7 @@ export default function ExamsPage() {
               <div className="flex gap-4 mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                 <span>⏱ 15 Minutes</span>
                 <span>•</span>
-                <span>📋 {activeExam.quickExam.length} Questions</span>
+                <span>📋 {getQuestionCount(activeExam.quickExam)} Questions</span>
               </div>
             </button>
 
@@ -206,7 +253,7 @@ export default function ExamsPage() {
               <div className="flex gap-4 mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                 <span>⏱ 60 Minutes</span>
                 <span>•</span>
-                <span>📋 {activeExam.fullExam.length} Questions</span>
+                <span>📋 {getQuestionCount(activeExam.fullExam)} Questions</span>
               </div>
             </button>
           </div>

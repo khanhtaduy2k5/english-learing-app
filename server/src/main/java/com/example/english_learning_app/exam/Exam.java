@@ -37,15 +37,15 @@ public class Exam {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
-    private Map<String, Object> variants;
+    private Object variants;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "full_exam", nullable = false)
-    private List<Map<String, Object>> fullExam;
+    private Object fullExam;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "quick_exam", nullable = false)
-    private List<Map<String, Object>> quickExam;
+    private Object quickExam;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

@@ -26,14 +26,16 @@ export function useDictionary(): UseDictionaryReturn {
 
     try {
       const res = await fetch(
-        `/api/dictionary/${encodeURIComponent(trimmed)}`
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(trimmed)}`
       );
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Word not found.");
+        setError("Word not found in dictionary.");
       } else {
-        setEntry(data as DictionaryEntry);
+        // The API returns an array, extract the first entry (best match)
+        const entryData = Array.isArray(data) ? data[0] : data;
+        setEntry(entryData as DictionaryEntry);
       }
     } catch {
       setError("Failed to fetch. Please check your connection.");

@@ -119,8 +119,8 @@ export interface Exam {
   emoji?: string;
   description?: string;
   variants: Record<string, any>;
-  fullExam: Array<Record<string, any>>;
-  quickExam: Array<Record<string, any>>;
+  fullExam: any;
+  quickExam: any;
   createdAt: string;
 }
 

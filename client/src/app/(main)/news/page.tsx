@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
-import FloatingDictionary from "@/components/FloatingDictionary";
-import { Globe, BookOpen } from "lucide-react";
+import { Globe } from "lucide-react";
 
 interface Article {
   title: string;
@@ -20,14 +19,7 @@ export default function NewsPage() {
   const [loading, setLoading] = useState(true);
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
 
-  // Floating Dictionary states
-  const [selectedWord, setSelectedWord] = useState("");
-  const [definition, setDefinition] = useState<any | null>(null);
-  const [loadingDef, setLoadingDef] = useState(false);
-  const [popupPosition, setPopupPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+
 
   useEffect(() => {
     async function loadData() {
@@ -44,47 +36,7 @@ export default function NewsPage() {
     loadData();
   }, []);
 
-  const handleMouseUp = async (e: React.MouseEvent) => {
-    const selection = window.getSelection();
-    const word = selection ? selection.toString().trim() : "";
-    if (!word || word.includes(" ") || word.length < 2) {
-      setSelectedWord("");
-      setPopupPosition(null);
-      return;
-    }
-    const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "");
-    if (!cleanWord || cleanWord.length < 2) return;
 
-    setSelectedWord(cleanWord);
-    setLoadingDef(true);
-    setPopupPosition({
-      x: Math.min(window.innerWidth - 340, Math.max(16, e.clientX - 140)),
-      y: e.clientY + window.scrollY - 185,
-    });
-
-    try {
-      const res = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${cleanWord.toLowerCase()}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) setDefinition(data[0]);
-      }
-    } catch {
-      setDefinition(null);
-    } finally {
-      setLoadingDef(false);
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setSelectedWord("");
-      setPopupPosition(null);
-    };
-    if (selectedWord) window.addEventListener("mousedown", handleClickOutside);
-    return () => window.removeEventListener("mousedown", handleClickOutside);
-  }, [selectedWord]);
 
   if (loading) {
     return (
@@ -100,7 +52,7 @@ export default function NewsPage() {
   // Article detail view
   if (activeArticle) {
     return (
-      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 relative selection:bg-indigo-500/30 selection:text-white">
+      <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 relative">
         <button
           onClick={() => setActiveArticle(null)}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
@@ -132,18 +84,10 @@ export default function NewsPage() {
           </div>
         )}
 
-        {/* Highlight translation notice */}
-        <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center gap-3 text-xs text-indigo-300">
-          <BookOpen className="w-4 h-4 flex-shrink-0 animate-pulse" />
-          <p>
-            Bôi đen một từ bất kỳ trong bài báo để mở Từ điển học thuật, tra cứu
-            giải nghĩa Anh-Anh & nghe phát âm chuẩn.
-          </p>
-        </div>
+
 
         <div
           className="text-base md:text-lg font-serif text-foreground leading-relaxed space-y-6 pt-4 border-t border-border/40 whitespace-pre-wrap"
-          onMouseUp={handleMouseUp}
         >
           {activeArticle.content}
         </div>
@@ -166,12 +110,7 @@ export default function NewsPage() {
           </div>
         )}
 
-        <FloatingDictionary
-          selectedWord={selectedWord}
-          popupPosition={popupPosition}
-          definition={definition}
-          loadingDef={loadingDef}
-        />
+
       </div>
     );
   }
@@ -189,8 +128,7 @@ export default function NewsPage() {
               Global News
             </h1>
             <p className="text-muted-foreground text-sm">
-              Đọc báo tiếng Anh thực tế từ các hãng thông tấn lớn kèm tra từ bôi
-              đen thông minh
+              Đọc báo tiếng Anh thực tế từ các hãng thông tấn lớn
             </p>
           </div>
         </div>

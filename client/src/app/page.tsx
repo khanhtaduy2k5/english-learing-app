@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { resolvedTheme } = useTheme();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
@@ -91,11 +91,7 @@ export default function Home() {
 
           <div className="flex gap-4 items-center">
             <ThemeToggle />
-            {isAuthenticated && (
-              <span className={`text-sm hidden lg:block ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Hi, <span className={isDark ? "text-white font-medium" : "text-slate-950 font-medium"}>{user?.name}</span>
-              </span>
-            )}
+
             <Link
               href="/login"
               className={`px-5 py-2.5 transition-colors text-sm font-medium ${
