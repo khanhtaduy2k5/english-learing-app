@@ -7,11 +7,14 @@ test("home page routes to register page", async ({ page }) => {
     page.getByRole("heading", { name: /master english with/i }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: /get started for free/i }).click();
+  const startBtn = page.getByRole("button", { name: /get started for free/i });
+  // Wait explicitly for the hero CTA to be visible and stable before clicking
+  await startBtn.waitFor({ state: "visible", timeout: 10000 });
+  await startBtn.click();
 
-  await expect(
-    page.getByRole("heading", { name: /create account/i }),
-  ).toBeVisible();
+  // Wait for client navigation to the register page and assert the heading
+  await page.waitForURL(/\/register/);
+  await expect(page.getByRole("heading", { name: /create account/i })).toBeVisible();
 });
 
 test("register page shows validation error for mismatched passwords", async ({
