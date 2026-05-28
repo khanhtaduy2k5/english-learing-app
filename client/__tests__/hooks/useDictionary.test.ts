@@ -39,7 +39,9 @@ describe("useDictionary", () => {
       await result.current.lookup(" learn ");
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/dictionary/learn");
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.dictionaryapi.dev/api/v2/entries/en/learn",
+    );
     expect(result.current.entry?.word).toBe("learn");
     expect(result.current.error).toBeNull();
     expect(result.current.isLoading).toBe(false);
@@ -58,7 +60,7 @@ describe("useDictionary", () => {
     });
 
     expect(result.current.entry).toBeNull();
-    expect(result.current.error).toBe("No definition found");
+    expect(result.current.error).toBe("Word not found in dictionary.");
   });
 
   it("ignores blank lookups and clears result state", async () => {
