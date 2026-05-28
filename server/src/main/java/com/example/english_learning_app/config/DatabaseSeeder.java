@@ -30,9 +30,16 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        if (levelRepository.count() > 0) {
+        if (levelRepository.count() > 0 && !hasLegacySeedData()) {
             log.info("Database already seeded. Skipping seeder.");
             return;
+        }
+
+        if (hasLegacySeedData()) {
+            log.info("Legacy seed data detected (A1/A2/B1 only). Re-seeding with current dataset...");
+            grammarRuleRepository.deleteAllInBatch();
+            unitRepository.deleteAllInBatch();
+            levelRepository.deleteAllInBatch();
         }
 
         log.info("Starting database seeding...");
@@ -110,5 +117,18 @@ public class DatabaseSeeder implements CommandLineRunner {
         grammarRuleRepository.saveAll(Arrays.asList(gr1, gr2, gr3));
 
         log.info("Database seeding successfully completed!");
+    }
+
+    private boolean hasLegacySeedData() {
+        var levels = levelRepository.findAll();
+        if (levels.size() != 3) {
+            return false;
+        }
+
+        var levelSet = levels.stream()
+            .map(Level::getLevel)
+            .collect(java.util.stream.Collectors.toSet());
+
+        return levelSet.containsAll(java.util.Set.of("A1", "A2", "B1"));
     }
 }

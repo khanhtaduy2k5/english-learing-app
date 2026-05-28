@@ -1,23 +1,21 @@
 package com.example.english_learning_app.auth;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.example.english_learning_app.user.User;
-import com.example.english_learning_app.user.UserRepository;
-
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.example.english_learning_app.user.User;
+import com.example.english_learning_app.user.UserRepository;
 
 class AuthServiceTest {
 
@@ -71,6 +69,35 @@ class AuthServiceTest {
     org.junit.jupiter.api.Assertions.assertThrows(ResponseStatusException.class, () -> {
         authService.register("Nguyen Van A", "learner@example.com", "password123");
     });
+  }
+
+  @Test
+  void loginDoesNotFailWhenRedisUnavailable() {
+    User mockUser = mock(User.class);
+    when(mockUser.getId()).thenReturn("user-1");
+    when(mockUser.getEmail()).thenReturn("Student@Example.com");
+    when(mockUser.getName()).thenReturn("Student");
+    when(mockUser.getPassword()).thenReturn("encodedpass");
+
+    when(userRepository.findByEmailIgnoreCase("Student@Example.com")).thenReturn(Optional.of(mockUser));
+    when(passwordEncoder.matches("password123", "encodedpass")).thenReturn(true);
+    when(redisTemplate.opsForValue()).thenThrow(new RuntimeException("redis down"));
+
+    assertDoesNotThrow(() -> authService.login("Student@Example.com", "password123"));
+  }
+
+  @Test
+  void registerDoesNotFailWhenRedisUnavailable() {
+    User savedUser = mock(User.class);
+    when(savedUser.getId()).thenReturn("user-2");
+    when(savedUser.getEmail()).thenReturn("learner@example.com");
+    when(savedUser.getName()).thenReturn("Learner");
+
+    when(userRepository.findByEmailIgnoreCase("learner@example.com")).thenReturn(Optional.empty());
+    when(userRepository.save(any(User.class))).thenReturn(savedUser);
+    when(redisTemplate.opsForValue()).thenThrow(new RuntimeException("redis down"));
+
+    assertDoesNotThrow(() -> authService.register("Learner", "learner@example.com", "password123"));
   }
 
   @Test
