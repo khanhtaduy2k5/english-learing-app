@@ -46,6 +46,8 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/english_learning
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       redis:
         condition: service_healthy
