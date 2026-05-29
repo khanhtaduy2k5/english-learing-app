@@ -1,6 +1,9 @@
 spring:
   application:
     name: english-learning-app
+  output:
+    ansi:
+      enabled: ALWAYS
   lifecycle:
     timeout-per-shutdown-phase: 30s
   config:

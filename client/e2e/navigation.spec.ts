@@ -7,7 +7,7 @@ test("home page routes to register page", async ({ page }) => {
     page.getByRole("heading", { name: /master english with/i }),
   ).toBeVisible();
 
-  const startBtn = page.getByRole("button", { name: /get started for free/i });
+  const startBtn = page.getByRole("link", { name: /get started for free/i });
   // Wait explicitly for the hero CTA to be visible and stable before clicking
   await startBtn.waitFor({ state: "visible", timeout: 10000 });
   await startBtn.click();
