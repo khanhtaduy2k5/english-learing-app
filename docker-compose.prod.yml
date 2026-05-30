@@ -8,31 +8,6 @@
 # =============================================================================
 
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: english-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: english_learning
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      # Persistent database storage on Droplet disk
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d english_learning"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 128M
-
   server:
     image: khanhtaduy2k5/english-server:latest
     container_name: english-server
@@ -42,14 +17,11 @@ services:
     env_file:
       - .env.production
     environment:
-      # Force connection to our local Docker PostgreSQL database
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/english_learning
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      # Connection to Supabase database (loaded from .env.production)
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_PROFILES_ACTIVE: prod
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
       - app-network
     healthcheck:
@@ -86,11 +58,6 @@ services:
           memory: 512M
         reservations:
           memory: 256M
-
-volumes:
-  # Persistent data volume for PostgreSQL
-  postgres-data:
-    driver: local
 
 networks:
   app-network:

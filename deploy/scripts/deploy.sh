@@ -92,6 +92,9 @@ push_server() {
 remote_deploy() {
     log_info "Deploying on server ${SERVER_IP}..."
 
+    log_info "Syncing docker-compose.prod.yml to VPS..."
+    scp docker-compose.prod.yml "${SSH_USER}@${SERVER_IP}:${APP_DIR}/docker-compose.prod.yml"
+
     ssh -o StrictHostKeyChecking=accept-new "${SSH_USER}@${SERVER_IP}" bash <<'REMOTE_SCRIPT'
         set -euo pipefail
         APP_DIR="/opt/english-app"
