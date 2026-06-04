@@ -17,19 +17,21 @@ class UserControllerTest {
 
   @Test
   void userResponseRecordHoldsAllFields() {
-    var response = new UserController.UserResponse("id-1", "Jane Doe", "jane@example.com");
+    var response = new UserController.UserResponse("id-1", "Jane Doe", "jane@example.com", "http://example.com/avatar.jpg");
 
     assertEquals("id-1", response.id());
     assertEquals("Jane Doe", response.name());
     assertEquals("jane@example.com", response.email());
+    assertEquals("http://example.com/avatar.jpg", response.avatarUrl());
   }
 
   @Test
   void userResponseFieldsAreNotNull() {
-    var response = new UserController.UserResponse("id-1", "Name", "email@test.com");
+    var response = new UserController.UserResponse("id-1", "Name", "email@test.com", "http://example.com/avatar.jpg");
 
     assertNotNull(response.id());
     assertNotNull(response.name());
     assertNotNull(response.email());
+    assertNotNull(response.avatarUrl());
   }
 }

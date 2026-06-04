@@ -7,8 +7,34 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "EngSphere - Next-Gen Language Learning Platform",
+  metadataBase: new URL("https://learnenglish1.me"),
+  title: {
+    default: "EngSphere - Next-Gen Language Learning Platform",
+    template: "%s | EngSphere",
+  },
   description: "Master English with interactive lessons, immersive quizzes, and personalized learning pathways.",
+  keywords: ["English learning", "learn English", "grammar lessons", "vocabulary", "quizzes", "EngSphere"],
+  authors: [{ name: "EngSphere Team" }],
+  creator: "EngSphere",
+  openGraph: {
+    title: "EngSphere - Next-Gen Language Learning Platform",
+    description: "Master English with interactive lessons, immersive quizzes, and personalized learning pathways.",
+    url: "https://learnenglish1.me",
+    siteName: "EngSphere",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EngSphere - Next-Gen Language Learning Platform",
+    description: "Master English with interactive lessons, immersive quizzes, and personalized learning pathways.",
+  },
+};
+
+export const viewport = {
+  themeColor: "#4f46e5",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

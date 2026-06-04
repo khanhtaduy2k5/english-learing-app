@@ -3,6 +3,15 @@ const nextConfig = {
   reactStrictMode: true,
   // Produces a standalone server bundle — essential for small Docker images
   output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+    ],
+  },
   env: {
     NEXT_PUBLIC_API_BASE_URL:
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",

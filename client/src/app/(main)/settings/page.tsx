@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme, ThemeMode } from "@/context/ThemeContext";
+import AvatarUpload from "@/components/profile/AvatarUpload";
 
 type SettingsTab = "profile" | "notifications" | "appearance" | "account";
 
@@ -294,16 +295,7 @@ export default function SettingsPage() {
                 <h3 className="text-lg font-bold text-foreground mb-6">
                   Profile Information
                 </h3>
-                <div className="flex items-center gap-5 mb-8">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/20">
-                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
-                  <div>
-                    <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white hover:bg-white/10 transition-all">
-                      Change Avatar
-                    </button>
-                  </div>
-                </div>
+                <AvatarUpload />
                 <div className="space-y-5">
                   <div>
                     <label

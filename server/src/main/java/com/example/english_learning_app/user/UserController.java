@@ -1,9 +1,12 @@
 package com.example.english_learning_app.user;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,7 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,9 +36,11 @@ import jakarta.validation.constraints.NotBlank;
 public class UserController {
 
   private final UserService userService;
+  private final CloudinaryService cloudinaryService;
 
-  public UserController(UserService userService) {
+  public UserController(UserService userService, CloudinaryService cloudinaryService) {
     this.userService = userService;
+    this.cloudinaryService = cloudinaryService;
   }
 
   @GetMapping
@@ -88,8 +95,28 @@ public class UserController {
     return ResponseEntity.noContent().build();
   }
 
+  @PutMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(summary = "Upload user avatar", description = "Upload a profile picture to Cloudinary and update user profile")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Avatar uploaded successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid file or parameters"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized")
+  })
+  public UserResponse uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+    String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    var user = userService.findById(userId);
+    
+    // Delete old avatar if it exists
+    if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
+      cloudinaryService.deleteImage(user.getAvatarUrl());
+    }
+    
+    String imageUrl = cloudinaryService.uploadImage(file, "avatars");
+    return toResponse(userService.updateAvatar(userId, imageUrl));
+  }
+
   private static UserResponse toResponse(User user) {
-    return new UserResponse(user.getId(), user.getName(), user.getEmail());
+    return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getAvatarUrl());
   }
 
   public record UserUpsertRequest(
@@ -99,5 +126,6 @@ public class UserController {
   public record UserResponse(
       @Schema(description = "User identifier", example = "5d9a3c5e-3e15-4f57-9c11-2d5c8e6d1c33") String id,
       @Schema(description = "User display name", example = "Nguyen Van A") String name,
-      @Schema(description = "User email address", example = "student@example.com") String email) {}
+      @Schema(description = "User email address", example = "student@example.com") String email,
+      @Schema(description = "User avatar image URL", example = "https://res.cloudinary.com/...") String avatarUrl) {}
 }

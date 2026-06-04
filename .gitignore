@@ -15,3 +15,6 @@ deploy/.env.production
 
 *.txt
 
+.agents
+
+graphify-out

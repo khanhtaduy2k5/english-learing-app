@@ -55,6 +55,12 @@ public class UserService {
     }
   }
 
+  public User updateAvatar(String userId, String avatarUrl) {
+    var user = findById(userId);
+    user.setAvatarUrl(avatarUrl);
+    return userRepository.save(user);
+  }
+
   public void delete(String userId) {
     var user = findById(userId);
     userRepository.delete(user);

@@ -25,6 +25,9 @@ public class User {
   @Column(name = "password_hash", nullable = true)
   private String password;
 
+  @Column(name = "avatar_url", nullable = true)
+  private String avatarUrl;
+
   protected User() {
   }
 
@@ -67,5 +70,13 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getAvatarUrl() {
+    return avatarUrl;
+  }
+
+  public void setAvatarUrl(String avatarUrl) {
+    this.avatarUrl = avatarUrl;
   }
 }

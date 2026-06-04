@@ -4,6 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { useAuthStore } from "@/store/authStore";
+import { User } from "@/types";
 
 const API_BASE_URL =
   typeof window !== "undefined"
@@ -281,6 +282,18 @@ class ApiClient {
   // Generic DELETE
   async delete<T>(url: string) {
     const response = await this.client.delete<T>(url);
+    return response.data;
+  }
+
+  // Upload Avatar
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await this.client.put<User>("/api/users/me/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   }
 }
