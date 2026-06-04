@@ -1,12 +1,13 @@
 package com.example.english_learning_app.user;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
+import java.io.IOException;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Map;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 
 @Service
 public class CloudinaryService {
@@ -21,12 +22,9 @@ public class CloudinaryService {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File is empty");
         }
-        
-        // Handle mock scenario for tests or local dev without credentials
-        String cloudName = cloudinary.config.cloudName;
-        if ("mock_cloud_name".equals(cloudName) || cloudName == null || cloudName.isBlank()) {
-            // Return a dummy URL
-            return "https://res.cloudinary.com/mock_cloud_name/image/upload/v1234567890/mock_avatar.png";
+
+        if (!hasValidCredentials()) {
+            throw new IllegalStateException("Cloudinary credentials are not configured");
         }
 
         Map<?, ?> params = ObjectUtils.asMap(
@@ -40,6 +38,10 @@ public class CloudinaryService {
 
     public void deleteImage(String url) {
         if (url == null || url.isBlank() || url.contains("mock_cloud_name")) {
+            return;
+        }
+
+        if (!hasValidCredentials()) {
             return;
         }
 
@@ -78,5 +80,20 @@ public class CloudinaryService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private boolean hasValidCredentials() {
+        String cloudName = cloudinary.config.cloudName;
+        String apiKey = cloudinary.config.apiKey;
+        String apiSecret = cloudinary.config.apiSecret;
+
+        return isConfigured(cloudName) && isConfigured(apiKey) && isConfigured(apiSecret)
+            && !"mock_cloud_name".equals(cloudName)
+            && !"mock_api_key".equals(apiKey)
+            && !"mock_api_secret".equals(apiSecret);
+    }
+
+    private boolean isConfigured(String value) {
+        return value != null && !value.isBlank();
     }
 }

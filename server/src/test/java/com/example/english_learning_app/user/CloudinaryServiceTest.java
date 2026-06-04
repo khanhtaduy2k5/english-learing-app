@@ -1,17 +1,15 @@
 package com.example.english_learning_app.user;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.cloudinary.Cloudinary;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
+
+import com.cloudinary.Cloudinary;
 
 public class CloudinaryServiceTest {
 
@@ -29,7 +27,7 @@ public class CloudinaryServiceTest {
     }
 
     @Test
-    public void testUploadImageWithMockConfig() throws IOException {
+    public void testUploadImageWithMockConfigThrowsException() {
         MockMultipartFile file = new MockMultipartFile(
             "file", 
             "test.png", 
@@ -37,10 +35,11 @@ public class CloudinaryServiceTest {
             "test image content".getBytes()
         );
 
-        String resultUrl = cloudinaryService.uploadImage(file, "avatars");
-        
-        assertNotNull(resultUrl);
-        assertEquals("https://res.cloudinary.com/mock_cloud_name/image/upload/v1234567890/mock_avatar.png", resultUrl);
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            cloudinaryService.uploadImage(file, "avatars");
+        });
+
+        assertEquals("Cloudinary credentials are not configured", exception.getMessage());
     }
 
     @Test
@@ -52,9 +51,11 @@ public class CloudinaryServiceTest {
             new byte[0]
         );
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             cloudinaryService.uploadImage(emptyFile, "avatars");
         });
+
+        assertEquals("File is empty", exception.getMessage());
     }
 
     @Test

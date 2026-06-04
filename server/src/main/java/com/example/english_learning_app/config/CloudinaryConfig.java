@@ -1,23 +1,24 @@
 package com.example.english_learning_app.config;
 
-import com.cloudinary.Cloudinary;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.cloudinary.Cloudinary;
 
 @Configuration
 public class CloudinaryConfig {
 
-    @Value("${CLOUDINARY_CLOUD_NAME:mock_cloud_name}")
+    @Value("${CLOUDINARY_CLOUD_NAME:}")
     private String cloudName;
 
-    @Value("${CLOUDINARY_API_KEY:mock_api_key}")
+    @Value("${CLOUDINARY_API_KEY:}")
     private String apiKey;
 
-    @Value("${CLOUDINARY_API_SECRET:mock_api_secret}")
+    @Value("${CLOUDINARY_API_SECRET:}")
     private String apiSecret;
 
     @Bean
