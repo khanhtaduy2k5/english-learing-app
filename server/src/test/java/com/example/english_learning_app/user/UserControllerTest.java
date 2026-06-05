@@ -9,10 +9,11 @@ class UserControllerTest {
 
   @Test
   void userUpsertRequestRecordHoldsFields() {
-    var request = new UserController.UserUpsertRequest("Test User", "test@example.com");
+    var request = new UserController.UserUpsertRequest("Test User", "test@example.com", "password123");
 
     assertEquals("Test User", request.name());
     assertEquals("test@example.com", request.email());
+    assertEquals("password123", request.password());
   }
 
   @Test

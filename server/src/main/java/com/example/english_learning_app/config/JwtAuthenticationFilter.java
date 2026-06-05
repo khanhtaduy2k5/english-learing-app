@@ -23,9 +23,14 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final SecretKey key;
+    private static final String DEFAULT_SECRET = "defaultSecretKeyWithAtLeast32CharactersForTesting123";
 
-    public JwtAuthenticationFilter(@Value("${jwt.secret:defaultSecretKeyWithAtLeast32CharactersForTesting123}") String secret) {
+    private SecretKey key;
+
+    public JwtAuthenticationFilter(@Value("${jwt.secret}") String secret) {
+        if (secret == null || secret.trim().isEmpty() || DEFAULT_SECRET.equals(secret)) {
+            throw new IllegalStateException("jwt.secret must be configured explicitly. Set JWT_SECRET in environment.");
+        }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

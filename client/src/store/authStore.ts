@@ -1,70 +1,81 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { User } from "@/types";
+import { apiClient } from "@/lib/api";
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isRefreshing: boolean;
   authenticate: (user: User, token: string) => void;
   setUser: (user: User) => void;
   setToken: (token: string) => void;
+  refreshOnStartup: () => Promise<void>;
   logout: () => void;
 }
 
-const setAuthToken = (token: string | null) => {
-  if (typeof window === "undefined") return;
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isRefreshing: false,
 
-  if (token) {
-    localStorage.setItem("token", token);
-    document.cookie = `token=${token}; Path=/; SameSite=Lax`;
-    return;
-  }
+  authenticate: (user: User, token: string) => {
+    set({
+      user,
+      token,
+      isAuthenticated: true,
+    });
+  },
 
-  localStorage.removeItem("token");
-  document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
-};
+  setUser: (user: User) =>
+    set({
+      user,
+      isAuthenticated: true,
+    }),
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
+  setToken: (token: string) => {
+    set({
+      token,
+    });
+  },
+
+  refreshOnStartup: async () => {
+    const state = get();
+    if (state.token || !state.user) return;
+    if (state.isRefreshing) return;
+
+    set({ isRefreshing: true });
+    try {
+      const response = await apiClient.post<{ token: string; user: User }>("/api/auth/refresh");
+      if (response.token) {
+        set({
+          token: response.token,
+          isAuthenticated: true,
+          user: response.user,
+        });
+      }
+    } catch {
+      set({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+      });
+    } finally {
+      set({ isRefreshing: false });
+    }
+  },
+
+  logout: async () => {
+    try {
+      await apiClient.post("/api/auth/logout");
+    } catch {
+      // Ignore logout errors
+    }
+    set({
       user: null,
       token: null,
       isAuthenticated: false,
-
-      authenticate: (user: User, token: string) => {
-        setAuthToken(token);
-        set({
-          user,
-          token,
-          isAuthenticated: true,
-        });
-      },
-
-      setUser: (user: User) =>
-        set({
-          user,
-          isAuthenticated: true,
-        }),
-
-      setToken: (token: string) => {
-        setAuthToken(token);
-        set({
-          token,
-        });
-      },
-
-      logout: () => {
-        setAuthToken(null);
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-        });
-      },
-    }),
-    {
-      name: "auth-storage",
-    },
-  ),
-);
+    });
+  },
+}));

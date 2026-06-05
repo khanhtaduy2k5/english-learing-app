@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +27,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/api/users")
@@ -37,10 +39,12 @@ public class UserController {
 
   private final UserService userService;
   private final CloudinaryService cloudinaryService;
+  private final PasswordEncoder passwordEncoder;
 
-  public UserController(UserService userService, CloudinaryService cloudinaryService) {
+  public UserController(UserService userService, CloudinaryService cloudinaryService, PasswordEncoder passwordEncoder) {
     this.userService = userService;
     this.cloudinaryService = cloudinaryService;
+    this.passwordEncoder = passwordEncoder;
   }
 
   @GetMapping
@@ -69,7 +73,8 @@ public class UserController {
       @ApiResponse(responseCode = "409", description = "Email already exists")
   })
   public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserUpsertRequest request) {
-    var user = userService.create(request.name(), request.email(), "defaultPassword123!");
+    var encodedPassword = passwordEncoder.encode(request.password());
+    var user = userService.create(request.name(), request.email(), encodedPassword);
     return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(user));
   }
 
@@ -121,7 +126,8 @@ public class UserController {
 
   public record UserUpsertRequest(
       @NotBlank @Schema(description = "User display name", example = "Nguyen Van A") String name,
-      @NotBlank @Email @Schema(description = "User email address", example = "student@example.com") String email) {}
+      @NotBlank @Email @Schema(description = "User email address", example = "student@example.com") String email,
+      @NotBlank @Size(min = 8, message = "Password must be at least 8 characters") String password) {}
 
   public record UserResponse(
       @Schema(description = "User identifier", example = "5d9a3c5e-3e15-4f57-9c11-2d5c8e6d1c33") String id,

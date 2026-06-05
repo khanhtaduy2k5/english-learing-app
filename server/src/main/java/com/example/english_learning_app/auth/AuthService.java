@@ -35,15 +35,20 @@ public class AuthService {
   private final long accessExpiration;
   private final long refreshExpiration;
 
-  public AuthService(UserRepository userRepository, 
+  private static final String DEFAULT_SECRET = "defaultSecretKeyWithAtLeast32CharactersForTesting123";
+
+  public AuthService(UserRepository userRepository,
                      PasswordEncoder passwordEncoder,
                      StringRedisTemplate redisTemplate,
-                     @Value("${jwt.secret:defaultSecretKeyWithAtLeast32CharactersForTesting123}") String secret,
-                     @Value("${jwt.expiration:900000}") long accessExpiration, // default 15 minutes
-                     @Value("${jwt.refreshExpiration:604800000}") long refreshExpiration) { // default 7 days
+                     @Value("${jwt.secret}") String secret,
+                     @Value("${jwt.expiration:900000}") long accessExpiration,
+                     @Value("${jwt.refreshExpiration:604800000}") long refreshExpiration) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.redisTemplate = redisTemplate;
+    if (secret == null || secret.trim().isEmpty() || DEFAULT_SECRET.equals(secret)) {
+      throw new IllegalStateException("jwt.secret must be configured explicitly. Set JWT_SECRET in environment.");
+    }
     this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     this.accessExpiration = accessExpiration;
     this.refreshExpiration = refreshExpiration;
@@ -63,17 +68,19 @@ public class AuthService {
   }
 
   public TokenPair register(String name, String email, String password) {
-    if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
+    var normalizedEmail = email.trim().toLowerCase();
+
+    if (userRepository.findByEmailIgnoreCase(normalizedEmail).isPresent()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
     }
-    
+
     if (password == null || password.length() < 8) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters");
     }
 
-    User user = new User(name, email, passwordEncoder.encode(password));
+    User user = new User(name.trim(), normalizedEmail, passwordEncoder.encode(password));
     user = userRepository.save(user);
-    
+
     return generateTokenPair(user);
   }
 

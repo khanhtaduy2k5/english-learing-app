@@ -18,8 +18,6 @@ export default function DashboardLayout({
 
   const handleLogout = () => {
     logout();
-    localStorage.removeItem("token");
-    document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
     window.location.href = "/login";
   };
 

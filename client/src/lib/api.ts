@@ -27,8 +27,7 @@ class ApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token =
-          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const token = typeof window !== "undefined" ? useAuthStore.getState().token : null;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }

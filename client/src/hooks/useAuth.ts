@@ -6,8 +6,9 @@ export const useAuth = () => {
   const authStore = useAuthStore();
 
   useEffect(() => {
-    // Check if auth was persisted from localStorage
-    setIsReady(true);
+    useAuthStore.getState().refreshOnStartup().finally(() => {
+      setIsReady(true);
+    });
   }, []);
 
   return {
