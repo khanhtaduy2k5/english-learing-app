@@ -1,7 +1,18 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { useAuthStore } from "@/store/authStore";
+
+vi.mock("@/lib/api", () => ({
+  apiClient: {
+    post: vi.fn().mockImplementation(async (url: string) => {
+      if (url === "/api/auth/logout") {
+        return {};
+      }
+      return {};
+    }),
+  },
+}));
 
 describe("authStore", () => {
   beforeEach(() => {
@@ -38,7 +49,7 @@ describe("authStore", () => {
     expect(state.token).toBe("test-token-123");
   });
 
-  it("logout clears all auth state", () => {
+  it("logout clears all auth state", async () => {
     const mockUser: any = { id: "1", name: "Test User", email: "test@example.com", role: "USER", createdAt: new Date().toISOString() };
 
     // Set up authenticated state
@@ -49,7 +60,7 @@ describe("authStore", () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
 
     // Logout
-    useAuthStore.getState().logout();
+    await useAuthStore.getState().logout();
 
     const state = useAuthStore.getState();
     expect(state.user).toBeNull();

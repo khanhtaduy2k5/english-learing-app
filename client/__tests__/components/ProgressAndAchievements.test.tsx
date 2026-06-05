@@ -12,6 +12,12 @@ vi.mock("@/store/authStore", () => {
     user: { id: "user-123", name: "Nguyen Van A" },
     token: "demo-token",
     isAuthenticated: true,
+    isRefreshing: false,
+    authenticate: vi.fn(),
+    setUser: vi.fn(),
+    setToken: vi.fn(),
+    logout: vi.fn(),
+    refreshOnStartup: vi.fn().mockResolvedValue(undefined),
   };
   const storeHook = vi.fn(() => mockState);
   (storeHook as any).getState = () => mockState;
