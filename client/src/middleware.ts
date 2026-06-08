@@ -8,7 +8,7 @@ const publicAuthPaths = ["/login", "/register"];
 const publicPaths = ["/", ...publicAuthPaths];
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+  const token = request.cookies.get("refreshToken")?.value;
   const { pathname } = request.nextUrl;
 
   // Check if current path is a public path
@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   // Let /register load once so the stale token can be cleared on the client.
   if (isRegisterPath && token) {
     const response = NextResponse.next();
-    response.cookies.set("token", "", {
+    response.cookies.set("refreshToken", "", {
       path: "/",
       maxAge: 0,
       sameSite: "lax",

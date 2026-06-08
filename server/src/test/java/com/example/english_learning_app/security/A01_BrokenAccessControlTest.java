@@ -28,7 +28,7 @@ class A01_BrokenAccessControlTest {
     void shouldReject_whenUserAccessesOtherUserProfile() throws Exception {
         mockMvc.perform(get("/api/users/{id}", "other-user-id")
                 .with(user("user-a").roles("USER")))
-            .andExpect(status().isNotFound()); // User not found
+            .andExpect(status().isForbidden()); // Access restricted by SecurityConfig to ROLE_ADMIN
     }
 
     @Test

@@ -72,9 +72,7 @@ export default function AchievementsPage() {
       if (!isReady || !user) return;
       try {
         setLoading(true);
-        const data = await apiClient.get<UserProgress[]>(
-          `/api/progress/user/${user.id}`,
-        );
+        const data = await apiClient.getUserProgress();
         setProgressList(data || []);
       } catch (err) {
         console.error("Failed to fetch user progress for achievements:", err);

@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -24,7 +26,7 @@ public class CloudinaryService {
         }
 
         if (!hasValidCredentials()) {
-            throw new IllegalStateException("Cloudinary credentials are not configured");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Cloudinary credentials are not configured");
         }
 
         Map<?, ?> params = ObjectUtils.asMap(

@@ -3,6 +3,8 @@ package com.example.english_learning_app.wordle;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,18 +21,28 @@ public class WordleController {
 
     @PostMapping("/start")
     public ResponseEntity<WordleGameDto> startGame() {
-        WordleGame game = wordleService.startGame();
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        WordleGame game = wordleService.startGame(userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToDto(game));
     }
 
     @GetMapping("/{gameId}")
     public ResponseEntity<WordleGameDto> getGame(@PathVariable String gameId) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         WordleGame game = wordleService.getGame(gameId);
+        if (game.getUserId() != null && !game.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this game");
+        }
         return ResponseEntity.ok(mapToDto(game));
     }
 
     @PostMapping("/{gameId}/guess")
     public ResponseEntity<GuessResult> submitGuess(@PathVariable String gameId, @RequestBody GuessRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        WordleGame game = wordleService.getGame(gameId);
+        if (game.getUserId() != null && !game.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this game");
+        }
         GuessResult result = wordleService.submitGuess(gameId, request.guess());
         return ResponseEntity.ok(result);
     }

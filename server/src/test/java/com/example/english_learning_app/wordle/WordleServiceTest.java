@@ -17,7 +17,7 @@ class WordleServiceTest {
 
     @Test
     void shouldStartGame_whenRequested() {
-        WordleGame game = wordleService.startGame();
+        WordleGame game = wordleService.startGame("u1");
         assertThat(game).isNotNull();
         assertThat(game.getId()).isNotBlank();
         assertThat(game.getTargetWord()).hasSize(5);
@@ -27,7 +27,7 @@ class WordleServiceTest {
 
     @Test
     void shouldReturnGame_whenValidId() {
-        WordleGame newGame = wordleService.startGame();
+        WordleGame newGame = wordleService.startGame("u1");
         WordleGame fetchedGame = wordleService.getGame(newGame.getId());
         
         assertThat(fetchedGame).isNotNull();
@@ -41,7 +41,7 @@ class WordleServiceTest {
 
     @Test
     void shouldProcessGuess_whenValidGuess() {
-        WordleGame game = wordleService.startGame();
+        WordleGame game = wordleService.startGame("u1");
         String guess = "APPLE"; // Just any 5-letter word
         GuessResult result = wordleService.submitGuess(game.getId(), guess);
         

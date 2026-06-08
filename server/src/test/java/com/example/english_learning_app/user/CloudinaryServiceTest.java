@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import com.cloudinary.Cloudinary;
 
 public class CloudinaryServiceTest {
@@ -35,11 +37,12 @@ public class CloudinaryServiceTest {
             "test image content".getBytes()
         );
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
             cloudinaryService.uploadImage(file, "avatars");
         });
 
-        assertEquals("Cloudinary credentials are not configured", exception.getMessage());
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
+        assertEquals("Cloudinary credentials are not configured", exception.getReason());
     }
 
     @Test

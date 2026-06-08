@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,6 +24,9 @@ class UserProgressControllerTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         userProgressController = new UserProgressController(userProgressService);
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken("u1", null, Collections.emptyList())
+        );
     }
 
     @Test
@@ -28,7 +34,7 @@ class UserProgressControllerTest {
         UserProgress up1 = new UserProgress(1, "u1", "lesson-1", "completed", 90, OffsetDateTime.now(), OffsetDateTime.now(), OffsetDateTime.now());
         when(userProgressService.getProgressByUserId("u1")).thenReturn(Collections.singletonList(up1));
 
-        List<UserProgress> result = userProgressController.getUserProgress("u1");
+        List<UserProgress> result = userProgressController.getUserProgress();
 
         assertEquals(1, result.size());
         assertEquals("lesson-1", result.get(0).getLessonId());
@@ -40,7 +46,7 @@ class UserProgressControllerTest {
         UserProgress up = new UserProgress(1, "u1", "lesson-1", "completed", 90, OffsetDateTime.now(), OffsetDateTime.now(), OffsetDateTime.now());
         when(userProgressService.getProgress("u1", "lesson-1")).thenReturn(Optional.of(up));
 
-        ResponseEntity<UserProgress> response = userProgressController.getLessonProgress("u1", "lesson-1");
+        ResponseEntity<UserProgress> response = userProgressController.getLessonProgress("lesson-1");
 
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertNotNull(response.getBody());
@@ -52,7 +58,7 @@ class UserProgressControllerTest {
         UserProgress updated = new UserProgress(1, "u1", "lesson-1", "completed", 95, OffsetDateTime.now(), OffsetDateTime.now(), OffsetDateTime.now());
         when(userProgressService.saveOrUpdateProgress("u1", "lesson-1", "completed", 95)).thenReturn(updated);
 
-        UserProgressController.ProgressUpdateRequest request = new UserProgressController.ProgressUpdateRequest("u1", "lesson-1", "completed", 95);
+        UserProgressController.ProgressUpdateRequest request = new UserProgressController.ProgressUpdateRequest("lesson-1", "completed", 95);
         ResponseEntity<UserProgress> response = userProgressController.updateProgress(request);
 
         assertTrue(response.getStatusCode().is2xxSuccessful());

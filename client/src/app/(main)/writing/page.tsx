@@ -174,26 +174,20 @@ export default function WritingPage() {
     setShowCorrected(false);
 
     try {
-      const res = await fetch("/api/writing/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, taskType, targetLevel }),
+      const data = await apiClient.post<WritingFeedback>("/api/writing/feedback", {
+        text,
+        taskType,
+        targetLevel,
       });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "Analysis failed. Please try again.");
-      } else {
-        setFeedback(data as WritingFeedback);
-        // Scroll to results
-        setTimeout(() => {
-          document
-            .getElementById("writing-results")
-            ?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
-    } catch {
-      setError("Network error. Please check your connection.");
+      setFeedback(data);
+      // Scroll to results
+      setTimeout(() => {
+        document
+          .getElementById("writing-results")
+          ?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Analysis failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

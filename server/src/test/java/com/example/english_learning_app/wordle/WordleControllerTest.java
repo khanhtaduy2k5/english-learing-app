@@ -7,9 +7,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -33,12 +36,15 @@ class WordleControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(wordleController).build();
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken("u1", null, Collections.emptyList())
+        );
     }
 
     @Test
     void shouldReturn201_whenStartGame() throws Exception {
-        WordleGame game = new WordleGame("APPLE");
-        when(wordleService.startGame()).thenReturn(game);
+        WordleGame game = new WordleGame("APPLE", "u1");
+        when(wordleService.startGame("u1")).thenReturn(game);
 
         mockMvc.perform(post("/api/wordle/start"))
             .andExpect(status().isCreated())
@@ -48,7 +54,7 @@ class WordleControllerTest {
 
     @Test
     void shouldReturn200_whenGetGame() throws Exception {
-        WordleGame game = new WordleGame("APPLE");
+        WordleGame game = new WordleGame("APPLE", "u1");
         when(wordleService.getGame(game.getId())).thenReturn(game);
 
         mockMvc.perform(get("/api/wordle/" + game.getId()))
@@ -66,8 +72,10 @@ class WordleControllerTest {
 
     @Test
     void shouldReturn200_whenSubmitGuess() throws Exception {
+        WordleGame game = new WordleGame("APPLE", "u1");
         GuessResult result = new GuessResult("APPLE", List.of(LetterFeedback.CORRECT, LetterFeedback.CORRECT, LetterFeedback.CORRECT, LetterFeedback.CORRECT, LetterFeedback.CORRECT), GameStatus.WON);
-        when(wordleService.submitGuess(anyString(), anyString())).thenReturn(result);
+        when(wordleService.getGame("game-123")).thenReturn(game);
+        when(wordleService.submitGuess("game-123", "APPLE")).thenReturn(result);
 
         mockMvc.perform(post("/api/wordle/game-123/guess")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -1,6 +1,8 @@
 package com.example.english_learning_app.wordle;
 
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +34,9 @@ public class WordleService {
     );
     private final Random random = new Random();
 
-    public WordleGame startGame() {
+    public WordleGame startGame(String userId) {
         String targetWord = DICTIONARY.get(random.nextInt(DICTIONARY.size()));
-        WordleGame game = new WordleGame(targetWord);
+        WordleGame game = new WordleGame(targetWord, userId);
         games.put(game.getId(), game);
         return game;
     }
@@ -51,11 +53,11 @@ public class WordleService {
         WordleGame game = getGame(gameId);
         
         if (game.getStatus() != GameStatus.IN_PROGRESS) {
-            throw new IllegalArgumentException("Game is already finished");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game is already finished");
         }
         
-        if (guess == null || guess.length() != 5) {
-            throw new IllegalArgumentException("Guess must be exactly 5 letters");
+        if (guess == null || !guess.matches("^[a-zA-Z]{5}$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guess must be exactly 5 letters and contain only alphabetic characters");
         }
         
         guess = guess.toUpperCase();

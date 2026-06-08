@@ -15,6 +15,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -100,8 +102,9 @@ class GroqServiceTest {
         when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
             .thenThrow(new RuntimeException("service unavailable"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> groqService.analyzeWriting(request));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> groqService.analyzeWriting(request));
 
-        assertEquals("Failed to analyze writing: service unavailable", exception.getMessage());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
+        assertEquals("Failed to analyze writing: service unavailable", exception.getReason());
     }
 }

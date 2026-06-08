@@ -120,9 +120,26 @@ public class UserController {
     return toResponse(userService.updateAvatar(userId, imageUrl));
   }
 
+  @PutMapping("/me")
+  @Operation(summary = "Update current user profile", description = "Update the authenticated user's name and email")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Profile updated successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid email or name parameters"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "409", description = "Email already in use")
+  })
+  public UserResponse updateProfile(@Valid @RequestBody UserProfileUpdateRequest request) {
+    String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    return toResponse(userService.update(userId, request.name(), request.email()));
+  }
+
   private static UserResponse toResponse(User user) {
     return new UserResponse(user.getId(), user.getName(), user.getEmail(), user.getAvatarUrl());
   }
+
+  public record UserProfileUpdateRequest(
+      @NotBlank @Schema(description = "User display name", example = "Nguyen Van A") String name,
+      @NotBlank @Email @Schema(description = "User email address", example = "student@example.com") String email) {}
 
   public record UserUpsertRequest(
       @NotBlank @Schema(description = "User display name", example = "Nguyen Van A") String name,

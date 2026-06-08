@@ -205,33 +205,24 @@ class ApiClient {
   }
 
   // User Progress
-  async getUserProgress(userId: string) {
-    const response = await this.client.get<any[]>(
-      `/api/progress/user/${userId}`,
-    );
-    return response.data;
+  async getUserProgress() {
+    return this.get<any[]>("/api/progress/me");
   }
 
-  async getLessonProgress(userId: string, lessonId: string) {
-    const response = await this.client.get<any>(
-      `/api/progress/user/${userId}/lesson/${lessonId}`,
-    );
-    return response.data;
+  async getLessonProgress(lessonId: string) {
+    return this.get<any>(`/api/progress/me/lesson/${lessonId}`);
   }
 
   async updateProgress(
-    userId: string,
     lessonId: string,
     status: string,
     quizScore?: number,
   ) {
-    const response = await this.client.post<any>("/api/progress", {
-      userId,
+    return this.post<any>("/api/progress", {
       lessonId,
       status,
       quizScore,
     });
-    return response.data;
   }
 
   // Public APIs proxy

@@ -47,13 +47,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await apiClient.register({
+      const response = await apiClient.register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
-      // Registration successful — redirect to login page
-      router.push("/login?registered=true");
+      const { token, user } = response.data;
+      useAuthStore.getState().authenticate(user, token);
+      router.push("/dashboard");
     } catch (err: any) {
       if (err.response?.data) {
         // Handle Spring Boot validation errors format

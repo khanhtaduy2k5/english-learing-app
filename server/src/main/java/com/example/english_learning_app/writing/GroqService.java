@@ -39,21 +39,35 @@ public class GroqService {
 
     @Transactional
     public WritingFeedbackResponse analyzeWriting(WritingFeedbackRequest request) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Groq API key is not configured");
+        }
+
         // Bước 1: Xác thực & Rate Limiting (Redis)
         String userId = SecurityContextHolder.getContext().getAuthentication() != null
                 ? SecurityContextHolder.getContext().getAuthentication().getName()
                 : "anonymous";
 
         String redisKey = "rate_limit:writing:" + userId;
-        String currentValStr = redisTemplate.opsForValue().get(redisKey);
-        if (currentValStr != null) {
-            int currentVal = Integer.parseInt(currentValStr);
-            if (currentVal >= 5) {
-                throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS,
-                    "Rate limit exceeded. Maximum 5 requests per hour."
-                );
+        boolean redisAvailable = true;
+        try {
+            if (redisTemplate != null) {
+                String currentValStr = redisTemplate.opsForValue().get(redisKey);
+                if (currentValStr != null) {
+                    int currentVal = Integer.parseInt(currentValStr);
+                    if (currentVal >= 5) {
+                        throw new ResponseStatusException(
+                            HttpStatus.TOO_MANY_REQUESTS,
+                            "Rate limit exceeded. Maximum 5 requests per hour."
+                        );
+                    }
+                }
             }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Bypassing Redis rate limiting check due to exception: {}", e.getMessage());
+            redisAvailable = false;
         }
 
         // Bước 2: Cắt tỉa (Sanitization) - Giới hạn 1000 từ
@@ -128,18 +142,33 @@ public class GroqService {
             logRepository.save(feedbackLog);
 
             // Bước 7: Tăng lượt sử dụng trong Redis sau khi API gọi thành công
-            Long newVal = redisTemplate.opsForValue().increment(redisKey);
-            if (newVal != null && newVal == 1) {
-                redisTemplate.expire(redisKey, Duration.ofHours(1));
+            if (redisTemplate != null && redisAvailable) {
+                try {
+                    Long newVal = redisTemplate.opsForValue().increment(redisKey);
+                    if (newVal != null && newVal == 1) {
+                        redisTemplate.expire(redisKey, Duration.ofHours(1));
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to increment rate limit in Redis: {}", e.getMessage());
+                }
             }
 
             return feedbackResponse;
 
         } catch (ResponseStatusException e) {
             throw e;
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            log.error("Groq API returned HTTP error: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Upstream AI service error: " + e.getMessage(), e);
+        } catch (org.springframework.web.client.ResourceAccessException e) {
+            log.error("Groq API timeout/connection failure: {}", e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI service is currently unavailable", e);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("Failed to parse Groq API JSON: {}", e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Invalid JSON response from AI service", e);
         } catch (Exception e) {
             log.error("Groq API call failed: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to analyze writing: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to analyze writing: " + e.getMessage(), e);
         }
     }
 

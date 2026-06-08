@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   refreshOnStartup: async () => {
     const state = get();
-    if (state.token || !state.user) return;
+    if (state.token) return;
     if (state.isRefreshing) return;
 
     set({ isRefreshing: true });

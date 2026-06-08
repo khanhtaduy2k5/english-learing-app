@@ -24,6 +24,7 @@ export default function TriviaArena({ difficulty, onClose }: TriviaArenaProps) {
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [showResult, setShowResult] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     async function loadTrivia() {
@@ -38,7 +39,7 @@ export default function TriviaArena({ difficulty, onClose }: TriviaArenaProps) {
       }
     }
     loadTrivia();
-  }, [difficulty]);
+  }, [difficulty, retryKey]);
 
   const handleAnswer = (answer: string) => {
     if (selectedAnswer !== null) return;
@@ -131,7 +132,7 @@ export default function TriviaArena({ difficulty, onClose }: TriviaArenaProps) {
                 setAnswers([]);
                 setShowResult(false);
                 setQuestions([]);
-                setLoading(true);
+                setRetryKey((prev) => prev + 1);
               }}
               className="flex-1 px-5 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:from-violet-500 hover:to-indigo-500 transition-all duration-300 shadow-lg shadow-violet-500/20"
             >

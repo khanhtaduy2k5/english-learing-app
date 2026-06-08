@@ -1,9 +1,10 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme, ThemeMode } from "@/context/ThemeContext";
 import AvatarUpload from "@/components/profile/AvatarUpload";
+import { apiClient } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import { User } from "@/types";
 
 type SettingsTab = "profile" | "notifications" | "appearance" | "account";
 
@@ -133,10 +134,42 @@ export default function SettingsPage() {
   });
   const [language, setLanguage] = useState("en");
   const [saved, setSaved] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.name);
+      setEmail(user.email);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLang = localStorage.getItem("language");
+      if (storedLang) {
+        setLanguage(storedLang);
+      }
+    }
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const response = await apiClient.put<User>("/api/users/me", {
+        name: displayName,
+        email: email,
+      });
+      useAuthStore.getState().setUser(response);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("language", language);
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save settings:", err);
+    }
   };
 
   const tabs: { id: SettingsTab; label: string; icon: JSX.Element }[] = [
@@ -310,7 +343,8 @@ export default function SettingsPage() {
                       title="Display Name"
                       aria-label="Display Name"
                       placeholder="Enter your display name"
-                      defaultValue={user?.name || ""}
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
                       className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     />
                   </div>
@@ -327,7 +361,8 @@ export default function SettingsPage() {
                       title="Email"
                       aria-label="Email"
                       placeholder="Enter your email"
-                      defaultValue={user?.email || ""}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     />
                   </div>
