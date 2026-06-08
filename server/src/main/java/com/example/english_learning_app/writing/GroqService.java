@@ -128,10 +128,9 @@ public class GroqService {
             logRepository.save(feedbackLog);
 
             // Bước 7: Tăng lượt sử dụng trong Redis sau khi API gọi thành công
-            if (currentValStr != null) {
-                redisTemplate.opsForValue().increment(redisKey);
-            } else {
-                redisTemplate.opsForValue().set(redisKey, "1", Duration.ofHours(1));
+            Long newVal = redisTemplate.opsForValue().increment(redisKey);
+            if (newVal != null && newVal == 1) {
+                redisTemplate.expire(redisKey, Duration.ofHours(1));
             }
 
             return feedbackResponse;

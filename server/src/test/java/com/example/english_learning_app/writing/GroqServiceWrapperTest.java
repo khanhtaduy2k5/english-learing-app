@@ -164,4 +164,23 @@ class GroqServiceWrapperTest {
         assertEquals(80, savedLog.getCompletionTokens());
         assertEquals(200, savedLog.getTotalTokens());
     }
+
+    @Test
+    void analyzeWriting_WhenFirstRequest_ShouldSetRedisExpiry() {
+        when(valueOperations.get("rate_limit:writing:mock-user-123")).thenReturn(null);
+        when(valueOperations.increment("rate_limit:writing:mock-user-123")).thenReturn(1L);
+
+        WritingFeedbackRequest request = new WritingFeedbackRequest();
+        request.setText("This is a completely valid English writing paragraph.");
+        request.setTaskType("essay");
+        request.setTargetLevel("B2");
+
+        String groqResponse = "{\"choices\":[{\"message\":{\"content\":\"{\\\"overallScore\\\":85}\"}}]}";
+        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+            .thenReturn(ResponseEntity.ok(groqResponse));
+
+        groqService.analyzeWriting(request);
+
+        verify(redisTemplate).expire(eq("rate_limit:writing:mock-user-123"), eq(java.time.Duration.ofHours(1)));
+    }
 }
