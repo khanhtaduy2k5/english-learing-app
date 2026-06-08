@@ -20,6 +20,13 @@ public class TestRedisConfig {
         StringRedisTemplate mockTemplate = mock(StringRedisTemplate.class);
         ValueOperations<String, String> mockOps = mock(ValueOperations.class);
         when(mockTemplate.opsForValue()).thenReturn(mockOps);
+
+        java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
+        when(mockOps.increment(org.mockito.ArgumentMatchers.anyString())).thenAnswer(invocation -> {
+            String key = invocation.getArgument(0);
+            return counters.computeIfAbsent(key, k -> new java.util.concurrent.atomic.AtomicLong(0)).incrementAndGet();
+        });
+
         return mockTemplate;
     }
 }

@@ -1,44 +1,48 @@
 package com.example.english_learning_app.config;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Slf4j
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
+    private final StringRedisTemplate redisTemplate;
 
-    private Bucket resolveBucket(String ip) {
-        return cache.computeIfAbsent(ip, this::newBucket);
-    }
-
-    private Bucket newBucket(String ip) {
-        // 100 requests per minute per IP to allow tests to run but still demonstrate rate limiting
-        Bandwidth limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)));
-        return Bucket.builder().addLimit(limit).build();
+    public RateLimitInterceptor(@org.springframework.beans.factory.annotation.Autowired(required = false) StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String ip = request.getRemoteAddr();
-        Bucket bucket = resolveBucket(ip);
-
-        if (bucket.tryConsume(1)) {
+        if (redisTemplate == null) {
             return true;
-        } else {
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.getWriter().write("Too many requests");
-            return false;
         }
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+
+        String redisKey = "rate_limit:ip:" + ip;
+        try {
+            Long count = redisTemplate.opsForValue().increment(redisKey);
+            if (count != null && count == 1) {
+                redisTemplate.expire(redisKey, Duration.ofMinutes(1));
+            }
+            if (count != null && count > 100) {
+                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                response.getWriter().write("Too many requests");
+                return false;
+            }
+        } catch (Exception e) {
+            log.warn("Redis rate limiter unavailable, falling back to open access. Error: {}", e.getMessage());
+        }
+        return true;
     }
 }

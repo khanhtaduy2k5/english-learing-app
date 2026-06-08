@@ -10,7 +10,7 @@ import java.util.List;
 @Configuration
 public class WebConfig {
 
-  @Value("${app.cors.allowed-origins}")
+  @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,https://learnenglish1.me,https://www.learnenglish1.me,http://server:8080}")
   private List<String> allowedOrigins;
 
   @Bean
