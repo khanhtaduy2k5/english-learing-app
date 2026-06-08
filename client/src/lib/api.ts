@@ -90,15 +90,17 @@ class ApiClient {
             const refreshResponse = await this.client.post("/api/auth/refresh");
             const newAccessToken = refreshResponse.data?.token;
 
-            if (newAccessToken) {
-              if (typeof window !== "undefined") {
-                useAuthStore.getState().setToken(newAccessToken);
-              }
-
-              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-              processQueue(null, newAccessToken);
-              return this.client(originalRequest);
+            if (!newAccessToken) {
+              throw new Error("No token returned from refresh endpoint");
             }
+
+            if (typeof window !== "undefined") {
+              useAuthStore.getState().setToken(newAccessToken);
+            }
+
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            processQueue(null, newAccessToken);
+            return this.client(originalRequest);
           } catch (refreshError) {
             processQueue(refreshError, null);
             if (typeof window !== "undefined") {
