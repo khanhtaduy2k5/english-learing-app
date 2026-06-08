@@ -10,7 +10,9 @@ import lombok.Builder;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "writing_feedback_logs")
+@Table(name = "writing_feedback_logs", indexes = {
+    @Index(name = "idx_writing_feedback_user", columnList = "user_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
