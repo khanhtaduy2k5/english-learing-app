@@ -3,6 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import { apiClient } from "@/lib/api";
 import { Exam } from "@/types";
+import { getQuestionCount, isAnswerCorrect, playAudio } from "@/lib/examsHelper";
+import { ReadingPassagePanel } from "@/components/exams/ReadingPassagePanel";
+import { DictationRenderer } from "@/components/exams/DictationRenderer";
+import { GapFillRenderer } from "@/components/exams/GapFillRenderer";
+import { MatchingHeadingsRenderer } from "@/components/exams/MatchingHeadingsRenderer";
+import { ClozeRenderer } from "@/components/exams/ClozeRenderer";
+import { WritingRenderer } from "@/components/exams/WritingRenderer";
+import { SpeakingRenderer } from "@/components/exams/SpeakingRenderer";
+import { MultipleChoiceRenderer } from "@/components/exams/MultipleChoiceRenderer";
 
 export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -35,17 +44,6 @@ export default function ExamsPage() {
     loadExams();
   }, []);
 
-  const getQuestionCount = (examData: any): number => {
-    if (!examData) return 0;
-    if (Array.isArray(examData)) return examData.length;
-    if (examData.sections && Array.isArray(examData.sections)) {
-      return examData.sections.reduce((acc: number, sec: any) => {
-        return acc + (Array.isArray(sec.questions) ? sec.questions.length : 0);
-      }, 0);
-    }
-    return 0;
-  };
-
   const activeExam = exams.find((e) => e.id === activeExamId);
   const activeQuestions = activeExam
     ? (() => {
@@ -54,12 +52,85 @@ export default function ExamsPage() {
         
         // Support direct array format (backward compatibility)
         if (Array.isArray(examData)) {
-          return examData.map((q: any) => ({
-            question: q.question || q.prompt || "",
-            options: Array.isArray(q.options) ? q.options : [q.answer || q.correctText || ""],
-            answer: q.answer || q.correctText || "",
-            explanation: q.explanation || ""
-          }));
+          const allQuestions: any[] = [];
+          examData.forEach((q: any) => {
+            if (q.type === "tfng" && Array.isArray(q.statements)) {
+              q.statements.forEach((st: any, sIdx: number) => {
+                allQuestions.push({
+                  id: `${q.id}-st-${sIdx}`,
+                  type: "tfng",
+                  question: st.statement,
+                  options: ["TRUE", "FALSE", "NOT GIVEN"],
+                  answer: st.answer,
+                  explanation: q.explanation || "",
+                  passage: q.passage || "",
+                  passageTitle: q.passageTitle || ""
+                });
+              });
+            } else if (q.type === "matching-headings" && Array.isArray(q.paragraphs)) {
+              q.paragraphs.forEach((p: any, pIdx: number) => {
+                const label = p.label;
+                allQuestions.push({
+                  id: `${q.id}-p-${pIdx}`,
+                  type: "matching-headings",
+                  question: `Choose the correct heading for Paragraph ${label}:`,
+                  options: q.headings || [],
+                  answer: q.answers ? q.answers[label] : "",
+                  explanation: q.explanation || "",
+                  paragraphText: p.text,
+                  paragraphLabel: label
+                });
+              });
+            } else if (q.type === "gap-fill" && q.answers) {
+              Object.keys(q.answers).forEach((num) => {
+                allQuestions.push({
+                  id: `${q.id}-g-${num}`,
+                  type: "gap-fill",
+                  question: `Fill in blank {${num}} in the summary below:`,
+                  answer: q.answers[num],
+                  explanation: q.explanation || "",
+                  gapNumber: num,
+                  summary: q.summary || "",
+                  passage: q.passage || "",
+                  passageTitle: q.passageTitle || ""
+                });
+              });
+            } else if (q.type === "mc-cloze" && Array.isArray(q.gaps)) {
+              q.gaps.forEach((g: any) => {
+                const ansIndex = g.correct;
+                const ans = Array.isArray(g.options) ? g.options[ansIndex] : "";
+                allQuestions.push({
+                  id: `${q.id}-c-${g.num}`,
+                  type: "mc-cloze",
+                  question: `Choose the correct option for gap {${g.num}}:`,
+                  options: Array.isArray(g.options) ? g.options : [],
+                  answer: ans,
+                  explanation: q.explanation || "",
+                  gapNumber: g.num,
+                  text: q.text || "",
+                  title: q.title || ""
+                });
+              });
+            } else {
+              const ans = q.correctText || q.answer || "";
+              let opts = q.options;
+              if (!Array.isArray(opts) || opts.length === 0) {
+                opts = [ans];
+              }
+              allQuestions.push({
+                id: q.id,
+                type: q.type || "mcq",
+                question: q.question || q.prompt || "",
+                options: opts,
+                answer: ans,
+                explanation: q.explanation || "",
+                audioText: q.audioText || "",
+                sample: q.sample || "",
+                minWords: q.minWords
+              });
+            }
+          });
+          return allQuestions;
         }
 
         // Support structured object format with sections (Postgres production)
@@ -68,17 +139,81 @@ export default function ExamsPage() {
           examData.sections.forEach((sec: any) => {
             if (sec.questions && Array.isArray(sec.questions)) {
               sec.questions.forEach((q: any) => {
-                const ans = q.correctText || q.answer || "";
-                let opts = q.options;
-                if (!Array.isArray(opts) || opts.length === 0) {
-                  opts = [ans];
+                if (q.type === "tfng" && Array.isArray(q.statements)) {
+                  q.statements.forEach((st: any, sIdx: number) => {
+                    allQuestions.push({
+                      id: `${q.id}-st-${sIdx}`,
+                      type: "tfng",
+                      question: st.statement,
+                      options: ["TRUE", "FALSE", "NOT GIVEN"],
+                      answer: st.answer,
+                      explanation: q.explanation || "",
+                      passage: q.passage || "",
+                      passageTitle: q.passageTitle || ""
+                    });
+                  });
+                } else if (q.type === "matching-headings" && Array.isArray(q.paragraphs)) {
+                  q.paragraphs.forEach((p: any, pIdx: number) => {
+                    const label = p.label;
+                    allQuestions.push({
+                      id: `${q.id}-p-${pIdx}`,
+                      type: "matching-headings",
+                      question: `Choose the correct heading for Paragraph ${label}:`,
+                      options: q.headings || [],
+                      answer: q.answers ? q.answers[label] : "",
+                      explanation: q.explanation || "",
+                      paragraphText: p.text,
+                      paragraphLabel: label
+                    });
+                  });
+                } else if (q.type === "gap-fill" && q.answers) {
+                  Object.keys(q.answers).forEach((num) => {
+                    allQuestions.push({
+                      id: `${q.id}-g-${num}`,
+                      type: "gap-fill",
+                      question: `Fill in blank {${num}} in the summary below:`,
+                      answer: q.answers[num],
+                      explanation: q.explanation || "",
+                      gapNumber: num,
+                      summary: q.summary || "",
+                      passage: q.passage || "",
+                      passageTitle: q.passageTitle || ""
+                    });
+                  });
+                } else if (q.type === "mc-cloze" && Array.isArray(q.gaps)) {
+                  q.gaps.forEach((g: any) => {
+                    const ansIndex = g.correct;
+                    const ans = Array.isArray(g.options) ? g.options[ansIndex] : "";
+                    allQuestions.push({
+                      id: `${q.id}-c-${g.num}`,
+                      type: "mc-cloze",
+                      question: `Choose the correct option for gap {${g.num}}:`,
+                      options: Array.isArray(g.options) ? g.options : [],
+                      answer: ans,
+                      explanation: q.explanation || "",
+                      gapNumber: g.num,
+                      text: q.text || "",
+                      title: q.title || ""
+                    });
+                  });
+                } else {
+                  const ans = q.correctText || q.answer || "";
+                  let opts = q.options;
+                  if (!Array.isArray(opts) || opts.length === 0) {
+                    opts = [ans];
+                  }
+                  allQuestions.push({
+                    id: q.id,
+                    type: q.type || "mcq",
+                    question: q.prompt || q.question || "",
+                    options: opts,
+                    answer: ans,
+                    explanation: q.explanation || "",
+                    audioText: q.audioText || "",
+                    sample: q.sample || "",
+                    minWords: q.minWords
+                  });
                 }
-                allQuestions.push({
-                  question: q.prompt || q.question || "",
-                  options: opts,
-                  answer: ans,
-                  explanation: q.explanation || ""
-                });
               });
             }
           });
@@ -122,18 +257,25 @@ export default function ExamsPage() {
     setAnswers((prev) => ({ ...prev, [currentIdx]: option }));
   };
 
+
+
   const handleSubmitExam = () => {
     if (submitted) return;
     if (timerRef.current) clearInterval(timerRef.current);
 
     let correctCount = 0;
+    let gradableCount = 0;
     activeQuestions.forEach((q: any, idx: number) => {
-      if (answers[idx] === q.answer) {
+      if (q.type === "writing" || q.type === "speaking") {
+        return;
+      }
+      gradableCount++;
+      if (isAnswerCorrect(answers[idx], q.answer, q.type)) {
         correctCount++;
       }
     });
 
-    const finalScore = activeQuestions.length > 0 ? Math.round((correctCount / activeQuestions.length) * 100) : 0;
+    const finalScore = gradableCount > 0 ? Math.round((correctCount / gradableCount) * 100) : 100;
     setScore(finalScore);
     setSubmitted(true);
   };
@@ -278,14 +420,18 @@ export default function ExamsPage() {
 
                 {/* Progress Indicators */}
                 <div className="grid grid-cols-5 gap-2 max-h-[35vh] overflow-y-auto pr-1">
-                  {activeQuestions.map((_, idx) => {
+                  {activeQuestions.map((q, idx) => {
                     const isAnswered = answers[idx] !== undefined;
                     const isActive = currentIdx === idx;
                     
                     let bg = "bg-white/5 text-slate-400 border-white/5";
                     if (submitted) {
-                      const isCorrect = answers[idx] === activeQuestions[idx].answer;
-                      bg = isCorrect ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border-rose-500/30";
+                      if (q.type === "writing" || q.type === "speaking") {
+                        bg = answers[idx] ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" : "bg-white/5 text-slate-500 border-white/5";
+                      } else {
+                        const isCorrect = isAnswerCorrect(answers[idx], q.answer, q.type);
+                        bg = isCorrect ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border-rose-500/30";
+                      }
                     } else if (isActive) {
                       bg = "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
                     } else if (isAnswered) {
@@ -321,56 +467,131 @@ export default function ExamsPage() {
             </div>
 
             {/* Right: Active Question Frame (8/12) */}
-            <div className="lg:col-span-8 rounded-2xl bg-white/[0.02] border border-white/5 p-8 flex flex-col justify-between h-[65vh]">
+            <div className="lg:col-span-8 rounded-2xl bg-white/[0.02] border border-white/5 p-8 flex flex-col justify-between min-h-[65vh]">
               {activeQuestions[currentIdx] ? (
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <span className="w-8 h-8 rounded-full bg-white/5 text-slate-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                      {currentIdx + 1}
-                    </span>
-                    <h3 className="text-white font-semibold text-lg leading-relaxed mt-0.5">
-                      {activeQuestions[currentIdx].question}
-                    </h3>
-                  </div>
+                (() => {
+                  const q = activeQuestions[currentIdx];
+                  const hasPassage = !!q.passage;
+                  const isCorrect = isAnswerCorrect(answers[currentIdx], q.answer, q.type);
 
-                  <div className="grid grid-cols-1 gap-2 pt-4">
-                    {(activeQuestions[currentIdx].options as string[]).map((option) => {
-                      const isSelected = answers[currentIdx] === option;
-                      const isCorrect = option === activeQuestions[currentIdx].answer;
-                      
-                      let style = "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10";
-                      if (submitted) {
-                        if (isCorrect) {
-                          style = "bg-emerald-500/20 border-emerald-500/40 text-emerald-300";
-                        } else if (isSelected) {
-                          style = "bg-rose-500/20 border-rose-500/40 text-rose-300";
-                        } else {
-                          style = "bg-white/2 border-white/2 text-slate-500 pointer-events-none";
-                        }
-                      } else if (isSelected) {
-                        style = "bg-indigo-500/10 border-indigo-500/30 text-indigo-300";
-                      }
+                  const leftPanel = hasPassage && (
+                    <ReadingPassagePanel
+                      passage={q.passage}
+                      passageTitle={q.passageTitle}
+                    />
+                  );
 
-                      return (
-                        <button
-                          key={option}
-                          disabled={submitted}
-                          onClick={() => handleSelectOption(option)}
-                          className={`w-full p-4 rounded-xl border text-left text-sm transition-all duration-200 ${style}`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  const renderQuestionContent = () => {
+                    switch (q.type) {
+                      case "dictation":
+                        return (
+                          <DictationRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                            playAudio={playAudio}
+                            isCorrect={isCorrect}
+                          />
+                        );
+                      case "gap-fill":
+                        return (
+                          <GapFillRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                            isCorrect={isCorrect}
+                            activeQuestions={activeQuestions}
+                          />
+                        );
+                      case "matching-headings":
+                        return (
+                          <MatchingHeadingsRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                          />
+                        );
+                      case "mc-cloze":
+                        return (
+                          <ClozeRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                            activeQuestions={activeQuestions}
+                          />
+                        );
+                      case "writing":
+                        return (
+                          <WritingRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                          />
+                        );
+                      case "speaking":
+                        return (
+                          <SpeakingRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                          />
+                        );
+                      default:
+                        return (
+                          <MultipleChoiceRenderer
+                            q={q}
+                            currentIdx={currentIdx}
+                            answers={answers}
+                            submitted={submitted}
+                            onSelectOption={handleSelectOption}
+                            playAudio={playAudio}
+                          />
+                        );
+                    }
+                  };
 
-                  {submitted && activeQuestions[currentIdx].explanation && (
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/5 mt-4 text-xs text-slate-400 leading-relaxed">
-                      <span className="font-bold text-slate-300 block mb-1">Explanation:</span>
-                      {activeQuestions[currentIdx].explanation}
+                  const questionPanel = (
+                    <div className="space-y-6">
+                      {/* Header Prompt */}
+                      <div className="flex gap-4">
+                        <span className="w-8 h-8 rounded-full bg-white/5 text-slate-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {currentIdx + 1}
+                        </span>
+                        <h3 className="text-white font-semibold text-lg leading-relaxed mt-0.5">
+                          {q.question}
+                        </h3>
+                      </div>
+
+                      {renderQuestionContent()}
+
+                      {submitted && q.explanation && (
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/5 mt-4 text-xs text-slate-400 leading-relaxed animate-fade-in">
+                          <span className="font-bold text-slate-300 block mb-1">Explanation:</span>
+                          {q.explanation}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+
+                  return (
+                    <div className={`grid grid-cols-1 ${hasPassage ? "lg:grid-cols-2" : ""} gap-8`}>
+                      {leftPanel}
+                      {questionPanel}
+                    </div>
+                  );
+                })()
               ) : (
                 <div className="text-center py-10 text-slate-500 text-sm">Question frame empty.</div>
               )}
