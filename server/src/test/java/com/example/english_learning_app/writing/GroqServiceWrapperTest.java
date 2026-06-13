@@ -57,6 +57,11 @@ class GroqServiceWrapperTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void analyzeWriting_WhenRateLimitExceeded_ShouldThrowTooManyRequests() {
         // Giả lập Redis trả về số lượt đã dùng là 5

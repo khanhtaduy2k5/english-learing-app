@@ -46,6 +46,11 @@ class GroqServiceTest {
         ReflectionTestUtils.setField(groqService, "model", "test-model");
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
     @Test
     void analyzeWritingBuildsRequestAndParsesJsonFeedback() {
         WritingFeedbackRequest request = new WritingFeedbackRequest();

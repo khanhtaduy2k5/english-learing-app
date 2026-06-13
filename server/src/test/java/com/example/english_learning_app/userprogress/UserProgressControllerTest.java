@@ -29,6 +29,11 @@ class UserProgressControllerTest {
         );
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void shouldReturnUserProgressList() {
         UserProgress up1 = new UserProgress(1, "u1", "lesson-1", "completed", 90, OffsetDateTime.now(), OffsetDateTime.now(), OffsetDateTime.now());

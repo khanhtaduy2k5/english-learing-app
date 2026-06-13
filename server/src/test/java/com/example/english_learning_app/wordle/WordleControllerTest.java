@@ -41,6 +41,11 @@ class WordleControllerTest {
         );
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void shouldReturn201_whenStartGame() throws Exception {
         WordleGame game = new WordleGame("APPLE", "u1");
