@@ -3,6 +3,7 @@ package com.example.english_learning_app.writing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,8 +31,11 @@ class GroqServiceTest {
         restTemplate = mock(RestTemplate.class);
         var logRepository = mock(WritingFeedbackLogRepository.class);
         var redisTemplate = mock(org.springframework.data.redis.core.StringRedisTemplate.class);
-        var valueOperations = mock(org.springframework.data.redis.core.ValueOperations.class);
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.execute(
+            any(org.springframework.data.redis.core.script.RedisScript.class),
+            any(java.util.List.class),
+            anyString()
+        )).thenReturn(1L);
 
         // Mock Security Context
         var securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
@@ -111,5 +115,21 @@ class GroqServiceTest {
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
         assertEquals("Failed to analyze writing: service unavailable", exception.getReason());
+    }
+
+    @Test
+    void analyzeWritingThrowsBadGatewayOnEmptyChoices() {
+        WritingFeedbackRequest request = new WritingFeedbackRequest();
+        request.setText("This is long enough to analyze.");
+        
+        // Groq response with empty choices list
+        String emptyChoicesResponse = "{\"choices\": []}";
+        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+            .thenReturn(ResponseEntity.ok(emptyChoicesResponse));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> groqService.analyzeWriting(request));
+
+        assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatusCode());
+        assertEquals("Invalid response from AI service", exception.getReason());
     }
 }

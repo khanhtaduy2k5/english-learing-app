@@ -16,7 +16,7 @@ EngSphere là một ứng dụng học tiếng Anh trực tuyến toàn diện, 
 
 ## 🛠️ Công Nghệ Sử Dụng
 
-*   **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Heroicons.
+*   **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Heroicons, Zustand.
 *   **Backend**: Spring Boot 3, Spring Security, Hibernate JPA, PostgreSQL, Redis, Jackson, Lombok.
 *   **AI Integration**: Groq API (LLaMA-3) với cấu trúc prompt bọc XML an toàn.
 *   **Deployment**: Docker & Docker Compose để container hóa toàn bộ dịch vụ.
@@ -28,19 +28,48 @@ EngSphere là một ứng dụng học tiếng Anh trực tuyến toàn diện, 
 ```text
 ├── client/                 # Next.js Client App
 │   ├── src/app/            # App Router Pages (exams, writing, profile...)
-│   └── src/components/     # UI Components (Sidebar, glass containers...)
+│   ├── src/components/     # UI Components (Sidebar, glass containers...)
+│   ├── src/store/          # Zustand State Management (authStore, uiStore...)
+│   └── __tests__/          # Vitest testing suite (unit & component tests)
 ├── server/                 # Spring Boot Backend Server
-│   └── src/main/java/      # Modules: auth, exam, writing, level, unit...
+│   ├── src/main/java/      # Modules: auth, exam, writing, level, unit, userprogress...
+│   └── src/test/java/      # Backend test suite (JUnit, Mockito, Security Integration)
 ├── deploy/                 # File cấu hình deploy sản phẩm
 └── docker-compose.yml      # Cấu hình container orchestrator chạy cục bộ
 ```
 
 ---
 
+## ⚙️ Cấu Hình Môi Trường (Environment Setup)
+
+### Phía Backend (Server)
+Tạo file `server/.env` tại thư mục `server/` chứa các cấu hình kết nối sau:
+```env
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/english_learning
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
+SPRING_DATA_REDIS_HOST=localhost
+SPRING_DATA_REDIS_PORT=6379
+SPRING_MAIL_HOST=smtp.gmail.com
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=your-email@gmail.com
+SPRING_MAIL_PASSWORD=your-app-password
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+GROQ_API_KEY=gsk_your_groq_api_key
+```
+
+### Phía Frontend (Client)
+Tạo file `client/.env.local` tại thư mục `client/` chứa cấu hình trỏ về API Backend:
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+---
+
 ## ⚡ Khởi Chạy Nhanh (Quick Start)
 
+### Cách 1: Sử dụng Docker Compose (Khuyên dùng)
 Dự án được cấu hình chạy hoàn chỉnh thông qua Docker Compose. Hãy đảm bảo bạn đã cài đặt Docker Desktop trên máy.
-
 1. **Khởi chạy toàn bộ hệ thống** (Database, Redis, Server, Frontend):
    ```bash
    docker compose up -d --build
@@ -54,25 +83,61 @@ Dự án được cấu hình chạy hoàn chỉnh thông qua Docker Compose. H�
    docker compose down
    ```
 
+### Cách 2: Khởi chạy thủ công từng phần
+1. **Backend**:
+   Đảm bảo PostgreSQL và Redis đã chạy trên local của bạn.
+   ```bash
+   cd server
+   # Windows
+   .\mvnw.cmd spring-boot:run
+   # Linux/Mac
+   ./mvnw spring-boot:run
+   ```
+2. **Frontend**:
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
+
 ---
 
-## 🧪 Kiểm Thử Hệ Thống (Testing)
+## 🧪 Kiểm Thử Hệ Thống & Độ Phủ Test (Testing & Coverage)
 
-### 1. Phía Server (Spring Boot JUnit tests)
-Chạy toàn bộ 96 test cases kiểm thử đơn vị (Unit tests) và tích hợp (Integration tests) của backend:
-```bash
-cd server
-./mvnw test
-```
+### 1. Phía Server (Spring Boot JUnit & JaCoCo Coverage)
+Chạy toàn bộ **125** test cases kiểm thử đơn vị (Unit tests) và tích hợp (Integration tests) của backend:
+*   **Chạy toàn bộ test:**
+    ```bash
+    cd server
+    # Windows
+    .\mvnw.cmd test
+    # Linux/Mac
+    ./mvnw test
+    ```
+*   **Tạo báo cáo Coverage (JaCoCo):**
+    Báo cáo HTML về độ phủ dòng code (Line Coverage) tự động tạo khi chạy test. Bạn có thể mở file sau để xem:
+    `server/target/site/jacoco/index.html`
 
-### 2. Phía Client (TypeScript Type Check)
-Kiểm tra tính nhất quán kiểu của Frontend:
-```bash
-cd client
-npm run type-check
-```
+### 2. Phía Client (Next.js Vitest Unit Tests & Coverage)
+Chạy toàn bộ **76** tests unit, hook, và component ở phía frontend:
+*   **Chạy toàn bộ test:**
+    ```bash
+    cd client
+    npm run test
+    ```
+*   **Chạy test cụ thể:**
+    ```bash
+    npx vitest run __tests__/lib/api.test.ts
+    ```
+*   **Kiểm tra độ phủ test coverage (Vitest Coverage):**
+    Chạy lệnh sau để tính toán độ phủ code phía frontend:
+    ```bash
+    npm run test:coverage
+    ```
+    Mở file báo cáo HTML tại đường dẫn sau để xem kết quả trực quan:
+    `client/coverage/index.html`
 
 ---
 
 > [!NOTE]
-> Dự án áp dụng các tiêu chuẩn an toàn cao về bảo mật thông tin (không hardcode secret, mã hóa mật khẩu bằng BCrypt, và xác thực phân quyền qua JWT).
+> Dự án áp dụng các tiêu chuẩn an toàn cao về bảo mật thông tin (không hardcode secret, mã hóa mật khẩu bằng BCrypt, xác thực phân quyền qua JWT, giới hạn Rate Limit qua Redis, và ngăn ngừa Prompt Injection bằng cấu trúc XML).

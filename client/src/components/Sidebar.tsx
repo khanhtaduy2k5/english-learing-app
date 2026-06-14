@@ -3,278 +3,90 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  BookOpen,
+  PenTool,
+  BookMarked,
+  Compass,
+  Headphones,
+  Edit3,
+  ClipboardList,
+  Award,
+  Newspaper,
+  Gamepad2,
+  TrendingUp,
+  Trophy,
+  Settings,
+  HelpCircle,
+  LogOut
+} from "lucide-react";
 
 const menuItems = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-        />
-      </svg>
-    ),
+    icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
     label: "Vocabulary",
     href: "/vocabulary",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-        />
-      </svg>
-    ),
+    icon: <BookMarked className="w-5 h-5" />,
   },
   {
     label: "Grammar",
     href: "/grammar",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
-      </svg>
-    ),
+    icon: <PenTool className="w-5 h-5" />,
   },
   {
     label: "Reading",
     href: "/reading",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-        />
-      </svg>
-    ),
+    icon: <BookOpen className="w-5 h-5" />,
   },
   {
     label: "Practice",
     href: "/practice",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
+    icon: <Compass className="w-5 h-5" />,
   },
   {
     label: "Listening",
     href: "/listening",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-        />
-      </svg>
-    ),
+    icon: <Headphones className="w-5 h-5" />,
   },
   {
     label: "Writing",
     href: "/writing",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-        />
-      </svg>
-    ),
+    icon: <Edit3 className="w-5 h-5" />,
   },
   {
     label: "Quizzes",
     href: "/quizzes",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-        />
-      </svg>
-    ),
+    icon: <ClipboardList className="w-5 h-5" />,
   },
   {
     label: "Exams",
     href: "/exams",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M12 14l9-5-9-5-9 5 9 5z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M12 14l9-5-9-5-9 5 9 5zm0 0v6M5 12v3a3 3 0 003-3"
-        />
-      </svg>
-    ),
+    icon: <Award className="w-5 h-5" />,
   },
   {
     label: "News",
     href: "/news",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M19 20a2 2 0 002-2V8a2 2 0 00-2-2h-5"
-        />
-      </svg>
-    ),
+    icon: <Newspaper className="w-5 h-5" />,
   },
   {
     label: "Wordle",
     href: "/wordle",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
+    icon: <Gamepad2 className="w-5 h-5" />,
   },
   {
     label: "Progress",
     href: "/progress",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        />
-      </svg>
-    ),
+    icon: <TrendingUp className="w-5 h-5" />,
   },
   {
     label: "Achievements",
     href: "/achievements",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-        />
-      </svg>
-    ),
+    icon: <Trophy className="w-5 h-5" />,
   },
 ];
 
@@ -298,27 +110,15 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen bg-sidebar/80 dark:bg-sidebar/90 backdrop-blur-xl border-r border-border flex flex-col z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 h-screen bg-sidebar/75 dark:bg-sidebar/85 backdrop-blur-2xl border-r border-border/80 flex flex-col z-50 transition-all duration-300 ${
         isCollapsed ? "w-[72px]" : "w-[260px]"
       }`}
     >
       {/* Logo & Toggle */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0 btn-press">
+            <BookOpen className="w-5 h-5 text-white" />
           </div>
           {!isCollapsed && (
             <span className="text-foreground font-bold text-lg tracking-tight">
@@ -330,7 +130,7 @@ export default function Sidebar({
           onClick={onToggle}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="p-1.5 rounded-lg hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-1.5 rounded-lg hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer btn-press"
         >
           <svg
             className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`}
@@ -361,11 +161,11 @@ export default function Sidebar({
             <Link
               key={item.href}
               href={item.href}
-              className={`group flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              className={`group flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-200 btn-press cursor-pointer ${
                 isCollapsed ? "justify-center px-2" : "gap-3 px-3"
               } ${
                 isActive
-                  ? "bg-gradient-to-r from-indigo-500/15 to-purple-500/5 text-foreground border border-indigo-500/10 dark:border-indigo-500/20 shadow-sm"
+                  ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/10 text-foreground border border-indigo-500/20 dark:border-indigo-500/30 shadow-md shadow-indigo-500/5"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
               }`}
               title={isCollapsed ? item.label : undefined}
@@ -377,7 +177,7 @@ export default function Sidebar({
               </span>
               {!isCollapsed && <span>{item.label}</span>}
               {isActive && !isCollapsed && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 shadow-sm shadow-indigo-400/50"></span>
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 shadow-sm shadow-indigo-400/50 animate-pulse"></span>
               )}
             </Link>
           );
@@ -408,28 +208,10 @@ export default function Sidebar({
               <Link
                 href="/settings"
                 onClick={() => setShowUserMenu(false)}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 btn-press cursor-pointer"
               >
                 <span className="text-muted-foreground group-hover:text-foreground">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
+                  <Settings className="w-4 h-4" />
                 </span>
                 <span>Settings</span>
               </Link>
@@ -437,22 +219,10 @@ export default function Sidebar({
               <Link
                 href="/help"
                 onClick={() => setShowUserMenu(false)}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 btn-press cursor-pointer"
               >
                 <span className="text-muted-foreground group-hover:text-foreground">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <HelpCircle className="w-4 h-4" />
                 </span>
                 <span>Help</span>
               </Link>
@@ -464,22 +234,10 @@ export default function Sidebar({
                   setShowUserMenu(false);
                   onLogout();
                 }}
-                className="group flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-500/10 active:scale-[0.98] transition-all duration-200 text-left"
+                className="group flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-500/10 active:scale-[0.98] transition-all duration-200 text-left cursor-pointer"
               >
                 <span className="text-rose-500">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
+                  <LogOut className="w-4 h-4" />
                 </span>
                 <span>Logout</span>
               </button>
@@ -490,7 +248,7 @@ export default function Sidebar({
         {/* User Card Trigger Button */}
         <button
           onClick={() => setShowUserMenu(!showUserMenu)}
-          className={`flex w-full items-center gap-3 p-2 rounded-2xl hover:bg-foreground/5 active:scale-[0.98] transition-all duration-200 text-left z-40 relative ${
+          className={`flex w-full items-center gap-3 p-2 rounded-2xl hover:bg-foreground/5 active:scale-[0.98] transition-all duration-200 text-left z-40 relative cursor-pointer ${
             isCollapsed ? "justify-center gap-0" : ""
           } ${showUserMenu ? "bg-foreground/5 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >

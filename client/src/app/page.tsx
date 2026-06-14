@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/context/ThemeContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useEffect, useState } from "react";
+import { BookOpen, GraduationCap, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -33,30 +34,20 @@ export default function Home() {
 
       {/* Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-4 left-4 right-4 z-50 transition-all duration-300 rounded-2xl ${
           scrolled
             ? isDark
-              ? "bg-[#030712]/80 backdrop-blur-md border-b border-white/5 py-4"
-              : "bg-white/85 backdrop-blur-md border-b border-slate-200 py-4 shadow-sm"
-            : "bg-transparent py-6"
+              ? "bg-[#030712]/85 backdrop-blur-md border border-white/10 py-3 shadow-lg shadow-black/20"
+              : "bg-white/85 backdrop-blur-md border border-slate-200 py-3 shadow-sm"
+            : isDark
+              ? "bg-white/5 border border-white/10 py-4 backdrop-blur-sm shadow-sm"
+              : "bg-white/45 border border-slate-200/40 py-4 backdrop-blur-sm shadow-sm"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
+          <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300 btn-press">
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
             <span
               className={`text-xl font-bold ${
@@ -77,7 +68,7 @@ export default function Home() {
                   .getElementById("features")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className={`text-sm font-medium transition-colors duration-200 ${
+              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 isDark
                   ? "text-slate-300 hover:text-indigo-400"
                   : "text-slate-600 hover:text-indigo-600"
@@ -91,7 +82,7 @@ export default function Home() {
                   .getElementById("how-it-works")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className={`text-sm font-medium transition-colors duration-200 ${
+              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 isDark
                   ? "text-slate-300 hover:text-indigo-400"
                   : "text-slate-600 hover:text-indigo-600"
@@ -105,7 +96,7 @@ export default function Home() {
                   .getElementById("testimonials")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className={`text-sm font-medium transition-colors duration-200 ${
+              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 isDark
                   ? "text-slate-300 hover:text-indigo-400"
                   : "text-slate-600 hover:text-indigo-600"
@@ -120,7 +111,7 @@ export default function Home() {
 
             <Link
               href="/login"
-              className={`px-5 py-2.5 transition-colors text-sm font-medium ${
+              className={`px-5 py-2.5 transition-colors text-sm font-medium cursor-pointer btn-press ${
                 isDark
                   ? "text-slate-300 hover:text-white"
                   : "text-slate-700 hover:text-slate-950"
@@ -130,7 +121,7 @@ export default function Home() {
             </Link>
             <Link
               href="/register"
-              className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
+              className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-full text-sm font-medium transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 cursor-pointer btn-press"
             >
               Register
             </Link>
@@ -174,7 +165,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/register"
-                className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 rounded-full text-lg font-semibold hover:scale-105 transition-all duration-300 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]"
+                className="w-full sm:w-auto px-8 py-4 bg-white text-slate-950 rounded-full text-lg font-semibold hover:scale-105 transition-all duration-300 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] btn-press cursor-pointer"
               >
                 Get Started for Free
               </Link>
@@ -184,7 +175,7 @@ export default function Home() {
                     .getElementById("features")
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
-                className={`w-full sm:w-auto px-8 py-4 border rounded-full text-lg font-medium backdrop-blur-sm transition-all duration-300 ${
+                className={`w-full sm:w-auto px-8 py-4 border rounded-full text-lg font-medium backdrop-blur-sm transition-all duration-300 btn-press cursor-pointer ${
                   isDark
                     ? "bg-white/5 hover:bg-white/10 border-white/10 text-white"
                     : "bg-white hover:bg-slate-100 border-slate-200 text-slate-900 shadow-sm"
@@ -219,24 +210,12 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Feature 1 */}
             <div
-              className={`group relative p-8 rounded-3xl border transition-all duration-500 hover:-translate-y-1 overflow-hidden ${isDark ? "bg-white/5 border-white/5 hover:border-white/10" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}
+              className={`group relative p-8 rounded-3xl glass-panel glass-panel-hover overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-6 border border-indigo-500/20 group-hover:scale-110 transition-transform duration-500">
-                  <svg
-                    className="w-7 h-7 text-indigo-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center mb-6 border border-indigo-500/20 group-hover:scale-110 transition-transform duration-500">
+                  <BookOpen className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <h3
                   className={
@@ -262,24 +241,12 @@ export default function Home() {
 
             {/* Feature 2 */}
             <div
-              className={`group relative p-8 rounded-3xl border transition-all duration-500 hover:-translate-y-1 overflow-hidden ${isDark ? "bg-white/5 border-white/5 hover:border-white/10" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}
+              className={`group relative p-8 rounded-3xl glass-panel glass-panel-hover overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6 border border-purple-500/20 group-hover:scale-110 transition-transform duration-500">
-                  <svg
-                    className="w-7 h-7 text-purple-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <div className="w-14 h-14 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center mb-6 border border-purple-500/20 group-hover:scale-110 transition-transform duration-500">
+                  <GraduationCap className="w-7 h-7 text-purple-600 dark:text-purple-400" />
                 </div>
                 <h3
                   className={
@@ -305,24 +272,12 @@ export default function Home() {
 
             {/* Feature 3 */}
             <div
-              className={`group relative p-8 rounded-3xl border transition-all duration-500 hover:-translate-y-1 overflow-hidden ${isDark ? "bg-white/5 border-white/5 hover:border-white/10" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}
+              className={`group relative p-8 rounded-3xl glass-panel glass-panel-hover overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-rose-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-pink-500/20 flex items-center justify-center mb-6 border border-pink-500/20 group-hover:scale-110 transition-transform duration-500">
-                  <svg
-                    className="w-7 h-7 text-pink-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
+                <div className="w-14 h-14 rounded-2xl bg-pink-500/10 dark:bg-pink-500/20 flex items-center justify-center mb-6 border border-pink-500/20 group-hover:scale-110 transition-transform duration-500">
+                  <TrendingUp className="w-7 h-7 text-pink-600 dark:text-pink-400" />
                 </div>
                 <h3
                   className={

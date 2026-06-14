@@ -27,6 +27,16 @@ public class TestRedisConfig {
             return counters.computeIfAbsent(key, k -> new java.util.concurrent.atomic.AtomicLong(0)).incrementAndGet();
         });
 
+        when(mockTemplate.execute(
+            org.mockito.ArgumentMatchers.any(org.springframework.data.redis.core.script.RedisScript.class),
+            org.mockito.ArgumentMatchers.any(java.util.List.class),
+            org.mockito.ArgumentMatchers.any()
+        )).thenAnswer(invocation -> {
+            java.util.List<String> keys = invocation.getArgument(1);
+            String key = keys.get(0);
+            return counters.computeIfAbsent(key, k -> new java.util.concurrent.atomic.AtomicLong(0)).incrementAndGet();
+        });
+
         return mockTemplate;
     }
 }

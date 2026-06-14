@@ -13,5 +13,10 @@ export default defineConfig({
     environment: "node",
     include: ["src/**/*.{test,spec}.{ts,tsx}", "__tests__/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["src/e2e/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: ["node_modules/", ".next/", "out/", "__tests__/", "e2e/", "next.config.mjs", "tailwind.config.ts"],
+    },
   },
 });
