@@ -33,7 +33,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (redisTemplate == null) {
-            return denyServiceUnavailable(response);
+            log.warn("StringRedisTemplate is not configured, bypassing rate limit checks.");
+            return true;
         }
 
         String ip = request.getRemoteAddr();
@@ -49,8 +50,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                 "60"
             );
             if (count == null) {
-                log.warn("Redis rate limiter returned null count for IP: {}", ip);
-                return denyServiceUnavailable(response);
+                log.warn("Redis rate limiter returned null count for IP: {}, bypassing checks.", ip);
+                return true;
             }
             if (count > 100) {
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
@@ -58,8 +59,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                 return false;
             }
         } catch (DataAccessException e) {
-            log.warn("Redis rate limiter unavailable, denying request. Error: {}", e.getMessage());
-            return denyServiceUnavailable(response);
+            log.warn("Redis rate limiter unavailable, allowing request for IP: {}. Error: {}", ip, e.getMessage());
+            return true;
         } catch (java.io.IOException e) {
             log.warn("Failed to write rate limit response, denying request. Error: {}", e.getMessage());
             return denyServiceUnavailable(response);

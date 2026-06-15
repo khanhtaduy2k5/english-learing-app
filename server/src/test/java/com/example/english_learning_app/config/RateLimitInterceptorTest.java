@@ -18,16 +18,15 @@ import org.springframework.mock.web.MockHttpServletResponse;
 class RateLimitInterceptorTest {
 
     @Test
-    void preHandle_deniesWhenRedisUnavailable() throws Exception {
+    void preHandle_allowsWhenRedisUnavailable() throws Exception {
         RateLimitInterceptor interceptor = new RateLimitInterceptor(null);
         HttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         boolean allowed = interceptor.preHandle(request, response, new Object());
 
-        assertFalse(allowed);
-        assertTrue(response.getContentAsString().contains("Rate limit service unavailable"));
-        org.junit.jupiter.api.Assertions.assertEquals(503, response.getStatus());
+        assertTrue(allowed);
+        org.junit.jupiter.api.Assertions.assertEquals(200, response.getStatus());
     }
 
     @Test
@@ -58,7 +57,7 @@ class RateLimitInterceptorTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void preHandle_deniesWhenIncrementReturnsNull() throws Exception {
+    void preHandle_allowsWhenIncrementReturnsNull() throws Exception {
         StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
         when(redisTemplate.execute(
             any(org.springframework.data.redis.core.script.RedisScript.class),
@@ -73,8 +72,7 @@ class RateLimitInterceptorTest {
         RateLimitInterceptor interceptor = new RateLimitInterceptor(redisTemplate);
         boolean allowed = interceptor.preHandle(request, response, new Object());
 
-        assertFalse(allowed);
-        org.junit.jupiter.api.Assertions.assertEquals(503, response.getStatus());
-        assertTrue(response.getContentAsString().contains("Rate limit service unavailable"));
+        assertTrue(allowed);
+        org.junit.jupiter.api.Assertions.assertEquals(200, response.getStatus());
     }
 }

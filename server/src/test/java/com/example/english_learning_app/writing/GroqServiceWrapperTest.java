@@ -206,7 +206,7 @@ class GroqServiceWrapperTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void analyzeWriting_WhenRedisUnavailable_ShouldRejectRequest() {
+    void analyzeWriting_WhenRedisUnavailable_ShouldBypassRateLimitAndSucceed() {
         when(redisTemplate.execute(
             any(RedisScript.class),
             any(java.util.List.class),
@@ -215,14 +215,18 @@ class GroqServiceWrapperTest {
 
         WritingFeedbackRequest request = new WritingFeedbackRequest();
         request.setText("This is a completely valid English writing paragraph.");
+        request.setTaskType("essay");
+        request.setTargetLevel("B2");
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
-            groqService.analyzeWriting(request)
-        );
+        String groqResponse = "{\"choices\":[{\"message\":{\"content\":\"{\\\"overallScore\\\":85}\"}}]}";
+        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+            .thenReturn(ResponseEntity.ok(groqResponse));
 
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
-        assertTrue(exception.getReason().contains("Rate limit service unavailable"));
-        verify(restTemplate, never()).exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
+        WritingFeedbackResponse response = groqService.analyzeWriting(request);
+
+        assertNotNull(response);
+        assertEquals(85, response.getOverallScore());
+        verify(restTemplate).exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class));
     }
 
     @Test

@@ -83,42 +83,33 @@ public class GroqService {
                 : "anonymous";
 
         String redisKey = "rate_limit:writing:" + userId;
-        try {
-            if (redisTemplate == null) {
-                throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "Rate limit service unavailable"
-                );
-            }
+        boolean bypassRateLimit = false;
+        if (redisTemplate == null) {
+            log.warn("StringRedisTemplate is not configured, bypassing AI rate limit checks.");
+            bypassRateLimit = true;
+        }
 
-            Long currentVal = redisTemplate.execute(
-                RATE_LIMIT_SCRIPT,
-                java.util.Collections.singletonList(redisKey),
-                "3600"
-            );
-
-            if (currentVal == null) {
-                throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "Rate limit service unavailable"
+        if (!bypassRateLimit) {
+            try {
+                Long currentVal = redisTemplate.execute(
+                    RATE_LIMIT_SCRIPT,
+                    java.util.Collections.singletonList(redisKey),
+                    "3600"
                 );
-            }
 
-            if (currentVal > 5) {
-                throw new ResponseStatusException(
-                    HttpStatus.TOO_MANY_REQUESTS,
-                    "Rate limit exceeded. Maximum 5 requests per hour."
-                );
+                if (currentVal == null) {
+                    log.warn("Redis rate limiter returned null count for user: {}, bypassing checks.", userId);
+                } else if (currentVal > 5) {
+                    throw new ResponseStatusException(
+                        HttpStatus.TOO_MANY_REQUESTS,
+                        "Rate limit exceeded. Maximum 5 requests per hour."
+                    );
+                }
+            } catch (ResponseStatusException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Rate limit service unavailable, allowing request for user: {}. Error: {}", userId, e.getMessage());
             }
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            log.warn("Rate limit service unavailable, denying request: {}", e.getMessage());
-            throw new ResponseStatusException(
-                HttpStatus.SERVICE_UNAVAILABLE,
-                "Rate limit service unavailable",
-                e
-            );
         }
 
         // Bước 4: Chuẩn bị Prompt & Gọi Groq API
