@@ -25,6 +25,14 @@ class WordleServiceTest {
         assertThat(game.getStatus()).isEqualTo(GameStatus.IN_PROGRESS);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void allDictionaryWordsShouldHaveLengthFive() {
+        java.util.List<String> dictionary = (java.util.List<String>) org.springframework.test.util.ReflectionTestUtils.getField(WordleService.class, "DICTIONARY");
+        assertThat(dictionary).isNotNull();
+        assertThat(dictionary).allSatisfy(word -> assertThat(word).hasSize(5));
+    }
+
     @Test
     void shouldReturnGame_whenValidId() {
         WordleGame newGame = wordleService.startGame("u1");

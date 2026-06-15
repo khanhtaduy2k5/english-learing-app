@@ -19,7 +19,7 @@ public class WordleService {
     private static final List<String> DICTIONARY = List.of(
         // Nature & Elements
         "EARTH", "RIVER", "OCEAN", "WATER", "PLANT", "GRASS", "STONE", "CLOUD", "RAINY", "SUNNY",
-        "BEACH", "FLOWER", "STORM", "LIGHT", "NIGHT", "SPACE", "WORLD", "FLAME", "SHINE", "SHADE",
+        "BEACH", "FIELD", "STORM", "LIGHT", "NIGHT", "SPACE", "WORLD", "FLAME", "SHINE", "SHADE",
         // Animals
         "MOUSE", "TIGER", "PANDA", "EAGLE", "SHARK", "WHALE", "ZEBRA", "HORSE", "KOALA", "CAMEL",
         // Objects & Lifestyle
