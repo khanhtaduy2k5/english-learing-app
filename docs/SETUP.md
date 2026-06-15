@@ -27,6 +27,12 @@
    cp .env.example .env.local
    ```
 
+   The file `client/.env.local` should contain:
+
+   ```env
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+   ```
+
 4. **Start development server:**
 
    ```bash
