@@ -22,9 +22,20 @@ EngSphere là một nền tảng học tiếng Anh trực tuyến toàn diện, 
 *   **Lớp phòng vệ Prompt Injection**: Sử dụng cấu trúc đóng gói prompt bằng thẻ XML đặc trưng để phân tách nội dung bài viết của người dùng với chỉ dẫn của hệ thống, loại bỏ triệt để nguy cơ ghi đè prompt (Prompt Hijacking).
 *   **Giới hạn chặt chẽ (Guardrails)**: Chặn cứng mọi bài viết vượt quá 1000 từ trực tiếp từ tầng Controller và Service để tối ưu tài nguyên và chi phí gọi API.
 
-### 3. Hệ Thống Bài Học & Trắc Nghiệm (Lessons & Quizzes)
-*   **Phân bậc trình độ chuẩn CEFR**: Giáo trình bài học và từ vựng được phân cấp rõ ràng theo trình độ người học (Beginner/A1, Intermediate/A2, Advanced/B1).
-*   **Bài tập củng cố tương tác**: Đi kèm mỗi bài học là hệ thống quiz trắc nghiệm tính điểm tự động giúp học viên kiểm tra ngay kiến thức vừa tiếp thu.
+### 3. Học Ngữ Pháp & Luyện Đọc Hiểu (Grammar & Reading)
+*   **Học ngữ pháp trực quan**: Các bài tập ngữ pháp được số hóa cấu trúc từ lý thuyết đến thực hành.
+*   **Luyện tập đọc hiểu**: Giao diện hiển thị bài đọc song song với câu hỏi trắc nghiệm/điền từ, lưu giữ trạng thái cuộn giúp người học dễ dàng tham chiếu thông tin.
+
+### 4. Luyện Nghe & Tin Tức (Listening & News)
+*   **Luyện nghe đa dạng**: Nghe các đoạn hội thoại hoặc radio trực tuyến (qua RadioStationCard) để nâng cao phản xạ nghe.
+*   **Tiếp cận tin tức**: Cập nhật các bản tin tiếng Anh học thuật hàng ngày giúp gia tăng vốn từ vựng thực tế.
+
+### 5. Game Học Từ Vựng Wordle
+*   **Mini-game đoán từ**: Trò chơi đoán từ vựng 5 chữ cái cổ điển hỗ trợ phản hồi màu sắc trực quan (đúng vị trí, sai vị trí, không tồn tại trong từ mục tiêu). Giúp học viên học từ mới một cách vui nhộn và đỡ nhàm chán.
+
+### 6. Quản Lý Tiến Độ & Thành Tích (Progress & Achievements)
+*   **Báo cáo học tập**: Theo dõi số bài học đã hoàn thành, điểm kiểm tra, và tiến độ ôn thi thử.
+*   **Hệ thống huy hiệu**: Mở khóa các thành tích khi đạt các mốc học tập cụ thể, tạo động lực duy trì thói quen học hàng ngày.
 
 ---
 
@@ -34,9 +45,10 @@ EngSphere là một nền tảng học tiếng Anh trực tuyến toàn diện, 
 *   **Framework chính**: Next.js 14 (App Router) & React 18.
 *   **Ngôn ngữ**: TypeScript để quản lý kiểu chặt chẽ.
 *   **Styling & UI**: Tailwind CSS (Thiết kế Glassmorphic sống động, responsive trên mọi kích thước màn hình) cùng thư viện Heroicons.
-*   **State Management**: Zustand (Cấu trúc các store độc lập như `authStore`, `uiStore`, `examStore`).
+*   **State Management**: Zustand (Cấu trúc các store độc lập như `authStore`, `uiStore`, `lessonStore`).
+*   **React Context**: ThemeContext quản lý chế độ Dark/Light mode toàn hệ thống.
 *   **HTTP Client**: Axios tích hợp Interceptors tự động đính kèm và làm mới (refresh) JWT token.
-*   **Testing**: Vitest và React Testing Library.
+*   **Testing**: Vitest và Playwright (kiểm thử đầu cuối E2E).
 
 ### Backend (Server)
 *   **Framework chính**: Spring Boot 3.x (Java 21).
@@ -81,45 +93,78 @@ Luồng tương tác và kết nối giữa các dịch vụ trong hệ thống 
         │                   │                      │
         ▼ JPA               ▼ Redis Client         ▼ HTTP Client
 ┌───────────────┐   ┌───────────────┐      ┌───────────────┐
-┌  PostgreSQL   │   │     Redis     │      │   Groq API    │
+│  PostgreSQL   │   │     Redis     │      │   Groq API    │
 │  (Primary DB) │   │ (Cache/Limit) │      │   (LLaMA-3)   │
 └───────────────┘   └───────────────┘      └───────────────┘
 ```
 
 ---
 
-## 📂 Chi Tiết Cấu Trúc Thư Mục
+## 📂 Chi Tiết Cấu Trúc Thư Mục Thực Tế
 
+### 1. Cấu Trúc Frontend (client/)
 ```text
-├── client/                     # Mã nguồn ứng dụng Next.js Frontend
-│   ├── src/app/                # Các trang cấu trúc App Router (exams, writing, profile...)
-│   ├── src/components/         # Thư viện component UI dùng chung và các bộ Renderer cho bài thi
-│   ├── src/hooks/              # Custom React hooks (useAuth, useExam...)
-│   ├── src/lib/                # Các hàm tiện ích và cấu hình Axios API client
-│   ├── src/store/              # Các Zustand stores quản lý trạng thái ứng dụng
-│   ├── src/types/              # Định nghĩa các kiểu TypeScript (interface, type)
+├── client/                     # Thư mục chứa dự án Next.js Frontend
+│   ├── src/app/                # Cấu trúc App Router của Next.js
+│   │   ├── (auth)/             # Nhóm định tuyến Xác thực người dùng
+│   │   │   ├── login/          # Trang đăng nhập
+│   │   │   └── register/       # Trang đăng ký
+│   │   └── (main)/             # Nhóm định tuyến chức năng chính của ứng dụng
+│   │       ├── achievements/   # Xem và quản lý các thành tích đạt được
+│   │       ├── dashboard/      # Bảng điều khiển tổng quan của học viên
+│   │       ├── exams/          # Luyện thi thử IELTS, TOEIC, CEFR
+│   │       ├── grammar/        # Nội dung học và luyện tập Ngữ pháp
+│   │       ├── listening/      # Chức năng luyện nghe tiếng Anh
+│   │       ├── news/           # Bản tin tiếng Anh học thuật hàng ngày
+│   │       ├── practice/       # Các bài tập thực hành kỹ năng
+│   │       ├── progress/       # Báo cáo tiến độ học tập chi tiết
+│   │       ├── quizzes/        # Kho trắc nghiệm tổng hợp
+│   │       ├── reading/        # Chức năng học và luyện đọc hiểu
+│   │       ├── settings/       # Cài đặt tài khoản và hệ thống
+│   │       ├── vocabulary/     # Kho học từ vựng
+│   │       ├── wordle/         # Trò chơi đoán từ đoán nghĩa Wordle
+│   │       └── writing/        # Viết luận kèm chấm điểm sửa lỗi bằng AI
+│   ├── src/components/         # Thư viện UI components
+│   │   ├── exams/              # Bộ kết xuất giao diện thi (Cloze, GapFill, MatchingHeadings...)
+│   │   ├── profile/            # Component liên quan đến thông tin người dùng
+│   │   ├── ui/                 # Các component cơ bản (Button, Card, Input...)
+│   │   ├── wordle/             # Giao diện bàn phím và ô nhập từ Wordle
+│   │   └── Sidebar.tsx         # Thanh điều hướng chính của nền tảng
+│   ├── src/context/            # Nơi định nghĩa ThemeContext (quản lý Light/Dark mode)
+│   ├── src/hooks/              # Các Custom Hooks dùng chung (useAuth, useExam...)
+│   ├── src/lib/                # Cấu hình Axios API client & Tiện ích
+│   ├── src/store/              # Zustand stores (authStore.ts, lessonStore.ts, uiStore.ts)
+│   ├── src/types/              # Khai báo kiểu TypeScript
 │   ├── src/styles/             # Tập tin định dạng CSS toàn cục (globals.css)
 │   └── __tests__/              # Bộ mã nguồn kiểm thử phía Frontend (Vitest)
-│
-├── server/                     # Mã nguồn ứng dụng Spring Boot Backend
-│   ├── src/main/java/          # Source code Java chính
+```
+
+### 2. Cấu Trúc Backend (server/)
+```text
+├── server/                     # Thư mục chứa dự án Spring Boot Backend
+│   ├── src/main/java/          # Thư mục chứa mã nguồn Java chính
 │   │   └── com/example/english_learning_app/
-│   │       ├── auth/           # Quản lý Đăng ký, Đăng nhập, JWT, SecurityConfig
-│   │       ├── user/           # Quản lý Thông tin cá nhân học viên
-│   │       ├── lesson/         # Quản lý bài học và Quizzes
-│   │       ├── exam/           # Quản lý cấu trúc bài thi, câu hỏi và chấm thi
-│   │       ├── writing/        # Wrapper kết nối Groq AI phân tích bài viết
-│   │       ├── config/         # Các lớp cấu hình hệ thống (AppConfig, RedisConfig, CorsConfig)
-│   │       └── exception/      # Bộ xử lý ngoại lệ tập trung (GlobalExceptionHandler)
-│   └── src/test/java/          # Bộ mã nguồn kiểm thử phía Backend (JUnit, Mockito)
-│
-├── deploy/                     # Chứa các tệp tin cấu hình triển khai dự án thực tế
-└── docker-compose.yml          # Triển khai nhanh toàn bộ hệ thống ở máy local qua Docker
+│   │       ├── auth/           # Bộ lọc xác thực JWT, SecurityConfig, Controller đăng nhập/đăng ký
+│   │       ├── config/         # Cấu hình hệ thống (AppConfig, RedisConfig, CorsConfig...)
+│   │       ├── exam/           # Logic quản lý bài thi chuẩn hóa, chấm điểm tự động
+│   │       ├── grammar/        # Quản lý bài học và câu hỏi luyện ngữ pháp
+│   │       ├── health/         # Endpoint check trạng thái API, Postgres, Redis (/health)
+│   │       ├── level/          # Quản lý trình độ học viên (A1, A2, B1...)
+│   │       ├── localization/   # Bản địa hóa thông tin phản hồi của hệ thống
+│   │       ├── publicapi/      # Tích hợp hoặc xuất bản các API công cộng
+│   │       ├── reading/        # Quản lý bài học và câu hỏi luyện đọc hiểu
+│   │       ├── unit/           # Quản lý bài học (units) và quizzes củng cố
+│   │       ├── user/           # Quản lý thông tin và tài khoản cá nhân
+│   │       ├── userprogress/   # Ghi nhận và thống kê tiến trình học của học viên
+│   │       ├── web/            # Cấu hình Web MVC và các interceptors (Rate Limit...)
+│   │       ├── wordle/         # Logic trò chơi Wordle (từ vựng 5 chữ cái)
+│   │       └── writing/        # Tích hợp AI chấm điểm bài luận (Groq API LLaMA-3)
+│   └── src/test/java/          # Bộ mã nguồn kiểm thử backend (JUnit, Mockito)
 ```
 
 ---
 
-## ⚙️ Cấu Hình Môi Trường (Environment Setup)
+## ⚙️ Cấu Hướng Thiết Lập Môi Trường (Environment Setup)
 
 ### 1. Phía Backend (Spring Boot Server)
 Tạo tệp `server/.env` tại thư mục `server/` và điền đầy đủ các thông tin cấu hình kết nối sau:
@@ -194,7 +239,7 @@ Hãy chắc chắn rằng Docker Desktop đã được mở và khởi chạy tr
 ## 🧪 Kiểm Thử Hệ Thống (Testing & Coverage)
 
 ### 1. Phía Server (Spring Boot JUnit & JaCoCo Coverage)
-Hệ thống backend tích hợp **125** test cases kiểm thử đơn vị (Unit tests) và tích hợp (Integration tests) đảm bảo tính toàn vẹn của logic nghiệp vụ, cấu hình bảo mật và phản hồi API.
+Hệ thống backend tích hợp các test cases kiểm thử đơn vị (Unit tests) và tích hợp (Integration tests) đảm bảo tính toàn vẹn của logic nghiệp vụ, cấu hình bảo mật và phản hồi API.
 *   **Chạy toàn bộ kiểm thử:**
     ```bash
     cd server
@@ -208,7 +253,7 @@ Hệ thống backend tích hợp **125** test cases kiểm thử đơn vị (Uni
     `server/target/site/jacoco/index.html`
 
 ### 2. Phía Client (Next.js Vitest Unit Tests & Coverage)
-Hệ thống frontend tích hợp **76** test cases dùng để kiểm tra hoạt động của các components UI, hooks, tiện ích API, và trạng thái Zustand.
+Hệ thống frontend tích hợp các test cases dùng để kiểm tra hoạt động của các components UI, hooks, tiện ích API, và trạng thái Zustand.
 *   **Chạy toàn bộ kiểm thử:**
     ```bash
     cd client
@@ -231,7 +276,7 @@ Hệ thống frontend tích hợp **76** test cases dùng để kiểm tra hoạ
 
 Hệ thống EngSphere được thiết kế tuân thủ các quy tắc bảo mật hiện đại nhằm bảo vệ thông tin người dùng và ngăn chặn tấn công:
 
-*   **Xác Thực Không Trạng Thái (Stateless JWT)**: Sử dụng JWT lưu trong bộ nhớ máy khách kết hợp cơ chế quay vòng khóa Refresh Token an toàn. Không lưu trữ thông tin phiên làm việc (Session) trên máy chủ, tối ưu hóa khả năng mở rộng (horizontal scaling).
+*   **Xác Thực Không Trạng Thế (Stateless JWT)**: Sử dụng JWT lưu trong bộ nhớ máy khách kết hợp cơ chế quay vòng khóa Refresh Token an toàn. Không lưu trữ thông tin phiên làm việc (Session) trên máy chủ, tối ưu hóa khả năng mở rộng (horizontal scaling).
 *   **Mã Hóa Mật Khẩu (BCrypt)**: Toàn bộ mật khẩu người dùng được băm bằng thuật toán BCrypt trước khi ghi nhận vào PostgreSQL database.
 *   **Phòng Ngừa Prompt Injection (Groq API)**:
     *   Sử dụng cơ chế bao bọc prompt bằng thẻ định dạng XML riêng biệt để cách ly phần chỉ thị của hệ thống (system prompt) và phần dữ liệu do học viên cung cấp (user input).
