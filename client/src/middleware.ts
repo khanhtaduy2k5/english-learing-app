@@ -36,6 +36,15 @@ export function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from login
   if (isPublicAuthPath && token) {
+    if (request.nextUrl.searchParams.has("clear")) {
+      const response = NextResponse.next();
+      response.cookies.set("refreshToken", "", {
+        path: "/",
+        maxAge: 0,
+        sameSite: "lax",
+      });
+      return response;
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

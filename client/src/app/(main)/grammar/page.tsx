@@ -122,11 +122,26 @@ export default function GrammarPage() {
   };
 
   const normalizeQuestion = (question: any) => {
-    if (typeof question === "string") {
-      return { question, options: [], answer: "" };
+    if (!question) {
+      return { question: "", options: [], answer: "", explanation: "" };
     }
-    return question;
+    if (typeof question === "string") {
+      return { question, options: [], answer: "", explanation: "" };
+    }
+    const qText = question.question || question.q || "";
+    const options = question.options || [];
+    let answerText = question.answer || "";
+    if (!answerText && typeof question.correct === "number" && question.correct < options.length) {
+      answerText = options[question.correct];
+    }
+    return {
+      question: qText,
+      options: options,
+      answer: answerText,
+      explanation: question.explanation || question.explain || "",
+    };
   };
+
 
   const activeRule = rules.find((r) => r.id === activeQuizId);
   const activeQuestions = (activeRule?.questions || []).map(normalizeQuestion);

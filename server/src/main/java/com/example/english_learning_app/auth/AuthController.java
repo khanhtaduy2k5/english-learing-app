@@ -82,9 +82,22 @@ public class AuthController {
   }
 
   private org.springframework.http.ResponseCookie createRefreshTokenCookie(String refreshToken, long maxAgeSeconds) {
+    boolean isSecure = false;
+    try {
+      org.springframework.web.context.request.RequestAttributes attrs = 
+          org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+      if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+        jakarta.servlet.http.HttpServletRequest req = 
+            ((org.springframework.web.context.request.ServletRequestAttributes) attrs).getRequest();
+        isSecure = req.isSecure() || "https".equalsIgnoreCase(req.getHeader("X-Forwarded-Proto"));
+      }
+    } catch (Exception e) {
+      // Fallback
+    }
+
     return org.springframework.http.ResponseCookie.from("refreshToken", refreshToken)
         .httpOnly(true)
-        .secure(false) // Set to true in prod (HTTPS)
+        .secure(isSecure)
         .sameSite("Lax")
         .path("/")
         .maxAge(maxAgeSeconds)

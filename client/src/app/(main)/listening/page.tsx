@@ -113,11 +113,11 @@ export default function ListeningPage() {
       <div className="relative p-6 md:p-8 rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-950/40 via-purple-900/20 to-background border border-indigo-500/20 shadow-2xl backdrop-blur-md">
         <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
         <div className="absolute bottom-0 right-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl -z-10"></div>
-        
+
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4 animate-bounce">
           🎧 Live Audio Learning
         </span>
-        
+
         <h1 className="text-2xl md:text-4xl font-extrabold text-foreground tracking-tight">
           English <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Radio Station Hub</span> 📻
         </h1>
@@ -135,35 +135,34 @@ export default function ListeningPage() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Left Column: Premium Interactive Audio Player Control (5/12 width) */}
         <div className="lg:col-span-5 space-y-6">
           <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-white/[0.04] via-white/[0.02] to-transparent border border-white/5 shadow-2xl relative overflow-hidden flex flex-col items-center text-center">
             <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
-            
+
             {/* Spinning Album/Radio CD */}
             <div className="relative mb-8 group select-none">
-              <div 
-                className={`w-48 h-48 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-1 shadow-2xl relative flex items-center justify-center transition-transform duration-500 ${
-                  isPlaying ? "animate-spin" : "scale-[0.98]"
-                }`}
+              <div
+                className={`w-48 h-48 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-1 shadow-2xl relative flex items-center justify-center transition-transform duration-500 ${isPlaying ? "animate-spin" : "scale-[0.98]"
+                  }`}
                 style={{ animationDuration: "12s" }}
               >
                 <div className="w-full h-full rounded-full bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden border border-white/10">
                   <div className="absolute inset-2 rounded-full border border-white/5"></div>
                   <div className="absolute inset-6 rounded-full border border-white/5"></div>
                   <div className="absolute inset-12 rounded-full border border-white/5"></div>
-                  
+
                   {/* Station Logo / Favicon */}
                   <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-3xl shadow-inner border border-white/10 z-10 animate-pulse">
                     {currentStation?.favicon ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img 
-                        src={currentStation.favicon} 
-                        alt="" 
-                        className="w-full h-full object-cover rounded-full" 
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} 
+                      <img
+                        src={currentStation.favicon}
+                        alt=""
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     ) : (
                       "📻"
@@ -171,7 +170,7 @@ export default function ListeningPage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Spinning active radar rings */}
               {isPlaying && (
                 <>
@@ -203,11 +202,10 @@ export default function ListeningPage() {
                 { delay: "0.4s", height: "h-3/5", activeHeight: "h-3/5" },
                 { delay: "0.7s", height: "h-1/5", activeHeight: "h-5/6" },
               ].map((bar, i) => (
-                <span 
-                  key={i} 
-                  className={`w-1.5 bg-gradient-to-t from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300 ${
-                    isPlaying ? `animate-[bounce_0.8s_infinite] ${bar.activeHeight}` : bar.height
-                  }`}
+                <span
+                  key={i}
+                  className={`w-1.5 bg-gradient-to-t from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300 ${isPlaying ? `animate-[bounce_0.8s_infinite] ${bar.activeHeight}` : bar.height
+                    }`}
                   style={{ animationDelay: isPlaying ? bar.delay : "0s" }}
                 ></span>
               ))}
@@ -215,15 +213,14 @@ export default function ListeningPage() {
 
             {/* Audio Controllers Panel */}
             <div className="w-full space-y-6 bg-white/[0.02] border border-white/5 p-5 rounded-2xl">
-              
+
               {/* Play Pause Trigger */}
               <button
                 onClick={togglePlay}
-                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-95 mx-auto ${
-                  isPlaying 
-                    ? "bg-rose-500 text-white hover:bg-rose-400 shadow-rose-500/25" 
+                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all transform active:scale-95 mx-auto ${isPlaying
+                    ? "bg-rose-500 text-white hover:bg-rose-400 shadow-rose-500/25"
                     : "bg-indigo-500 text-white hover:bg-indigo-400 shadow-indigo-500/25 hover:translate-y-[-1px]"
-                }`}
+                  }`}
               >
                 {isPlaying ? (
                   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
@@ -267,7 +264,7 @@ export default function ListeningPage() {
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <span>🌐</span> English Stations Directory ({stations.length})
           </h3>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto scrollbar-thin pr-2">
             {stations.map((st, i) => (
               <RadioStationCard

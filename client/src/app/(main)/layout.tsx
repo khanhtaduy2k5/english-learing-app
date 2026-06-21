@@ -18,7 +18,7 @@ export default function DashboardLayout({
 
   const handleLogout = () => {
     logout();
-    window.location.href = "/login";
+    window.location.href = "/login?clear=1";
   };
 
   if (!isReady) {

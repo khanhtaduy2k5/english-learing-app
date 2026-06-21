@@ -105,7 +105,7 @@ class ApiClient {
             processQueue(refreshError, null);
             if (typeof window !== "undefined") {
               useAuthStore.getState().logout();
-              window.location.href = "/login";
+              window.location.href = "/login?clear=1";
             }
             return Promise.reject(refreshError);
           } finally {

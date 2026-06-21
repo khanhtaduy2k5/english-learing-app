@@ -101,7 +101,13 @@ export default function ReadingPage() {
   const handleSubmitQuiz = () => {
     if (!activePassage) return;
     let finalScore = 0;
-    activePassage.questions.forEach((q, i) => {
+    const normalizedQuestions = (activePassage.questions || []).map((q: any) => ({
+      question: q.question || q.q || "",
+      options: q.options || [],
+      correct: typeof q.correct === "number" ? q.correct : (typeof q.correct === "string" ? parseInt(q.correct, 10) : 0),
+      explanation: q.explanation || q.explain || ""
+    }));
+    normalizedQuestions.forEach((q, i) => {
       if (quizAnswers[i] === q.correct) finalScore++;
     });
     setQuizScore(finalScore);
@@ -130,6 +136,13 @@ export default function ReadingPage() {
 
   // Reading Passage detail view
   if (activePassage) {
+    const normalizedQuestions = (activePassage.questions || []).map((q: any) => ({
+      question: q.question || q.q || "",
+      options: q.options || [],
+      correct: typeof q.correct === "number" ? q.correct : (typeof q.correct === "string" ? parseInt(q.correct, 10) : 0),
+      explanation: q.explanation || q.explain || ""
+    }));
+
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 relative">
         <button
@@ -167,7 +180,7 @@ export default function ReadingPage() {
 
 
         {/* Comprehension Quiz section */}
-        {activePassage.questions && activePassage.questions.length > 0 && (
+        {normalizedQuestions && normalizedQuestions.length > 0 && (
           <div className="pt-8 border-t border-border space-y-6">
             <div className="flex items-center gap-2 mb-2">
               <Award className="w-5 h-5 text-indigo-400" />
@@ -177,7 +190,7 @@ export default function ReadingPage() {
             </div>
 
             <div className="space-y-6">
-              {activePassage.questions.map((q, qIdx) => (
+              {normalizedQuestions.map((q, qIdx) => (
                 <div
                   key={qIdx}
                   className="p-6 rounded-2xl bg-card/80 dark:bg-white/[0.02] border border-border space-y-4"
@@ -190,7 +203,7 @@ export default function ReadingPage() {
                   </h4>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                    {q.options.map((opt, oIdx) => {
+                    {q.options.map((opt: string, oIdx: number) => {
                       const isSelected = quizAnswers[qIdx] === oIdx;
                       const isCorrect = oIdx === q.correct;
                       const isWrongChoice = isSelected && !isCorrect;
@@ -244,7 +257,7 @@ export default function ReadingPage() {
                   onClick={handleSubmitQuiz}
                   disabled={
                     Object.keys(quizAnswers).length <
-                    activePassage.questions.length
+                    normalizedQuestions.length
                   }
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-sm transition-all duration-300 active:scale-98 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
                 >
@@ -258,9 +271,9 @@ export default function ReadingPage() {
                     </h4>
                     <p className="text-muted-foreground text-xs mt-1">
                       Bạn trả lời đúng {quizScore}/
-                      {activePassage.questions.length} câu hỏi (
+                      {normalizedQuestions.length} câu hỏi (
                       {Math.round(
-                        (quizScore / activePassage.questions.length) * 100,
+                        (quizScore / normalizedQuestions.length) * 100,
                       )}
                       %)
                     </p>

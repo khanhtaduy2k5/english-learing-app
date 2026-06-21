@@ -239,8 +239,8 @@ public class PublicApiService {
                     String country = (String) item.get("countrycode");
                     String tags = (String) item.get("tags");
                     
-                    // Filter out stations with bad stream URLs
-                    if (name == null || name.trim().isEmpty() || streamUrl == null || streamUrl.isEmpty() || !streamUrl.startsWith("http")) {
+                    // Filter out stations with bad stream URLs or containing VOA in name
+                    if (name == null || name.trim().isEmpty() || streamUrl == null || streamUrl.isEmpty() || !streamUrl.startsWith("http") || name.toLowerCase().contains("voa")) {
                         continue;
                     }
                     
