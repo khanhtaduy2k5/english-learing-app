@@ -6,19 +6,30 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
+import com.example.english_learning_app.common.exception.AiServiceException;
+import com.example.english_learning_app.common.exception.DomainException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class GroqServiceTest {
@@ -27,32 +38,34 @@ class GroqServiceTest {
     private GroqService groqService;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
         restTemplate = mock(RestTemplate.class);
         var logRepository = mock(WritingFeedbackLogRepository.class);
-        var redisTemplate = mock(org.springframework.data.redis.core.StringRedisTemplate.class);
+        var redisTemplate = mock(StringRedisTemplate.class);
         when(redisTemplate.execute(
-            any(org.springframework.data.redis.core.script.RedisScript.class),
+            any(RedisScript.class),
             any(java.util.List.class),
             anyString()
         )).thenReturn(1L);
 
         // Mock Security Context
-        var securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
-        var authentication = mock(org.springframework.security.core.Authentication.class);
+        var securityContext = mock(SecurityContext.class);
+        var authentication = mock(Authentication.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getName()).thenReturn("mock-user");
-        org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+        SecurityContextHolder.setContext(securityContext);
 
         groqService = new GroqService(restTemplate, new ObjectMapper(), logRepository, redisTemplate);
         ReflectionTestUtils.setField(groqService, "apiKey", "test-api-key");
         ReflectionTestUtils.setField(groqService, "apiUrl", "https://example.test/chat");
-        ReflectionTestUtils.setField(groqService, "model", "test-model");
+        ReflectionTestUtils.setField(groqService, "model", "llama-3.3-70b-versatile");
+        ReflectionTestUtils.setField(groqService, "fallbackModel", "llama-3.1-8b-instant");
     }
 
-    @org.junit.jupiter.api.AfterEach
+    @AfterEach
     void tearDown() {
-        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -73,8 +86,13 @@ class GroqServiceTest {
               ]
             }
             """;
-        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-            .thenReturn(ResponseEntity.ok(groqResponse));
+
+        when(restTemplate.exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)
+        )).thenReturn(ResponseEntity.ok(groqResponse));
 
         WritingFeedbackResponse response = groqService.analyzeWriting(request);
 
@@ -88,33 +106,79 @@ class GroqServiceTest {
         WritingFeedbackRequest request = new WritingFeedbackRequest();
         request.setText("This is long enough to analyze.");
 
-        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-            .thenReturn(ResponseEntity.ok("""
-                {"choices":[{"message":{"content":"{\\"overallScore\\":70,\\"band\\":\\"B1\\"}"}}]}
-                """));
+        when(restTemplate.exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)
+        )).thenReturn(ResponseEntity.ok("""
+            {"choices":[{"message":{"content":"{\\"overallScore\\":70,\\"band\\":\\"B1\\"}"}}]}
+            """));
 
         groqService.analyzeWriting(request);
 
         ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        org.mockito.Mockito.verify(restTemplate).exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), entityCaptor.capture(), eq(String.class));
+        verify(restTemplate).exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            entityCaptor.capture(),
+            eq(String.class)
+        );
 
-        HttpEntity entity = entityCaptor.getValue();
+        HttpEntity<?> entity = entityCaptor.getValue();
         assertEquals("Bearer test-api-key", entity.getHeaders().getFirst("Authorization"));
         assertEquals("application/json", entity.getHeaders().getContentType().toString());
-        assertEquals("test-model", ((java.util.Map<?, ?>) entity.getBody()).get("model"));
+        assertEquals("llama-3.3-70b-versatile", ((java.util.Map<?, ?>) entity.getBody()).get("model"));
+    }
+
+    @Test
+    void analyzeWritingRetriesWithFallbackModelWhenPrimaryFails() {
+        WritingFeedbackRequest request = new WritingFeedbackRequest();
+        request.setText("This is long enough to analyze.");
+
+        String validResponse = """
+            {"choices":[{"message":{"content":"{\\"overallScore\\":75,\\"band\\":\\"B2\\"}"}}]}
+            """;
+
+        // First call fails with 400 Bad Request (model decommissioned), second call succeeds with fallback model
+        when(restTemplate.exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)
+        ))
+        .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Model decommissioned"))
+        .thenReturn(ResponseEntity.ok(validResponse));
+
+        WritingFeedbackResponse response = groqService.analyzeWriting(request);
+
+        assertEquals(75, response.getOverallScore());
+        verify(restTemplate, times(2)).exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)
+        );
     }
 
     @Test
     void analyzeWritingWrapsApiAndParsingFailures() {
         WritingFeedbackRequest request = new WritingFeedbackRequest();
         request.setText("This is long enough to analyze.");
-        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-            .thenThrow(new RuntimeException("service unavailable"));
+        when(restTemplate.exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)
+        )).thenThrow(new RuntimeException("service unavailable"));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> groqService.analyzeWriting(request));
+        DomainException exception = assertThrows(
+            DomainException.class,
+            () -> groqService.analyzeWriting(request)
+        );
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
-        assertEquals("Failed to analyze writing: service unavailable", exception.getReason());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatus());
+        assertEquals("Failed to analyze writing: service unavailable", exception.getMessage());
     }
 
     @Test
@@ -122,14 +186,20 @@ class GroqServiceTest {
         WritingFeedbackRequest request = new WritingFeedbackRequest();
         request.setText("This is long enough to analyze.");
         
-        // Groq response with empty choices list
         String emptyChoicesResponse = "{\"choices\": []}";
-        when(restTemplate.exchange(eq("https://example.test/chat"), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-            .thenReturn(ResponseEntity.ok(emptyChoicesResponse));
+        when(restTemplate.exchange(
+            eq("https://example.test/chat"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(String.class)
+        )).thenReturn(ResponseEntity.ok(emptyChoicesResponse));
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> groqService.analyzeWriting(request));
+        DomainException exception = assertThrows(
+            DomainException.class,
+            () -> groqService.analyzeWriting(request)
+        );
 
-        assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatusCode());
-        assertEquals("Invalid response from AI service", exception.getReason());
+        assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatus());
+        assertEquals("Invalid response from AI service", exception.getMessage());
     }
 }

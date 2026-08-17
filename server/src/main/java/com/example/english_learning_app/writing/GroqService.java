@@ -1,23 +1,37 @@
 package com.example.english_learning_app.writing;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
+
+import com.example.english_learning_app.common.exception.AiRateLimitExceededException;
+import com.example.english_learning_app.common.exception.AiServiceException;
+import com.example.english_learning_app.common.exception.AiServiceUnavailableException;
+import com.example.english_learning_app.common.exception.DomainException;
+import com.example.english_learning_app.common.exception.InvalidWritingInputException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +46,9 @@ public class GroqService {
 
     @Value("${groq.model:llama-3.3-70b-versatile}")
     private String model;
+
+    @Value("${groq.fallbackModel:llama-3.1-8b-instant}")
+    private String fallbackModel;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -49,70 +66,11 @@ public class GroqService {
 
     @Transactional
     public WritingFeedbackResponse analyzeWriting(WritingFeedbackRequest request) {
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Groq API key is not configured");
-        }
+        validateApiKey();
+        String text = validateAndSanitizeRequest(request);
+        String userId = resolveUserId();
+        enforceRateLimit(userId);
 
-        // Bước 1: Cắt tỉa (Sanitization) - Giới hạn 1000 từ & Validate Request
-        if (request == null || request.getText() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Text is required");
-        }
-        String text = request.getText().trim();
-        String[] words = text.split("\\s+");
-        if (words.length > 1000) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Text must not exceed 1000 words"
-            );
-        }
-
-        // Bước 2: Phát hiện Prompt Injection
-        String lowerText = text.toLowerCase();
-        if (lowerText.contains("ignore previous instructions") ||
-            lowerText.contains("ignore the instructions above") ||
-            lowerText.contains("</user_text>")) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Prompt injection detected. Request rejected."
-            );
-        }
-
-        // Bước 3: Xác thực & Rate Limiting (Redis)
-        String userId = SecurityContextHolder.getContext().getAuthentication() != null
-                ? SecurityContextHolder.getContext().getAuthentication().getName()
-                : "anonymous";
-
-        String redisKey = "rate_limit:writing:" + userId;
-        boolean bypassRateLimit = false;
-        if (redisTemplate == null) {
-            log.warn("StringRedisTemplate is not configured, bypassing AI rate limit checks.");
-            bypassRateLimit = true;
-        }
-
-        if (!bypassRateLimit) {
-            try {
-                Long currentVal = redisTemplate.execute(
-                    RATE_LIMIT_SCRIPT,
-                    java.util.Collections.singletonList(redisKey),
-                    "3600"
-                );
-
-                if (currentVal == null) {
-                    log.warn("Redis rate limiter returned null count for user: {}, bypassing checks.", userId);
-                } else if (currentVal > 5) {
-                    throw new ResponseStatusException(
-                        HttpStatus.TOO_MANY_REQUESTS,
-                        "Rate limit exceeded. Maximum 5 requests per hour."
-                    );
-                }
-            } catch (ResponseStatusException e) {
-                throw e;
-            } catch (Exception e) {
-                log.warn("Rate limit service unavailable, allowing request for user: {}. Error: {}", userId, e.getMessage());
-            }
-        }
-
-        // Bước 4: Chuẩn bị Prompt & Gọi Groq API
         String systemPrompt = buildSystemPrompt(request.getTaskType(), request.getTargetLevel());
         String userContent = "Please analyze this English writing inside the <user_text> tag:\n\n<user_text>" + text + "</user_text>";
 
@@ -130,34 +88,31 @@ public class GroqService {
         headers.setBearerAuth(apiKey);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                apiUrl,
-                HttpMethod.POST,
-                new HttpEntity<>(body, headers),
-                String.class
-            );
+            ResponseEntity<String> response = executeGroqApiCall(body, headers);
 
             JsonNode root = objectMapper.readTree(response.getBody());
             JsonNode choices = root.path("choices");
             if (choices.isMissingNode() || !choices.isArray() || choices.isEmpty()) {
                 log.error("Invalid response from Groq API (no choices): {}", response.getBody());
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Invalid response from AI service");
+                throw new AiServiceException("Invalid response from AI service", HttpStatus.BAD_GATEWAY);
             }
+
             JsonNode message = choices.get(0).path("message");
             if (message.isMissingNode()) {
                 log.error("Invalid response from Groq API (no message): {}", response.getBody());
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Invalid response from AI service");
+                throw new AiServiceException("Invalid response from AI service", HttpStatus.BAD_GATEWAY);
             }
-            String content = message.path("content").asText();
+
+            String content = stripMarkdownJsonWrapper(message.path("content").asText());
             WritingFeedbackResponse feedbackResponse = parseGroqResponse(content);
 
-            // Bước 5: Trích xuất Token Usage
+            // Extract Token Usage
             JsonNode usageNode = root.path("usage");
             int promptTokens = usageNode.path("prompt_tokens").asInt(0);
             int completionTokens = usageNode.path("completion_tokens").asInt(0);
             int totalTokens = usageNode.path("total_tokens").asInt(0);
 
-            // Bước 6: Lưu Nhật ký giao dịch xuống Database
+            // Audit Log
             WritingFeedbackLog feedbackLog = WritingFeedbackLog.builder()
                 .userId(userId)
                 .inputText(text)
@@ -173,22 +128,120 @@ public class GroqService {
 
             return feedbackResponse;
 
-        } catch (ResponseStatusException e) {
+        } catch (DomainException e) {
             throw e;
-        } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            log.error("Groq API returned HTTP error: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString(), e);
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Upstream AI service error: " + e.getMessage(), e);
-        } catch (org.springframework.web.client.ResourceAccessException e) {
-            log.error("Groq API timeout/connection failure: {}", e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI service is currently unavailable", e);
+        } catch (HttpStatusCodeException e) {
+            log.error("Groq API HTTP error: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new AiServiceException("Upstream AI service error: " + e.getMessage(), HttpStatus.BAD_GATEWAY, e);
+        } catch (ResourceAccessException e) {
+            log.error("Groq API connection failure: {}", e.getMessage(), e);
+            throw new AiServiceUnavailableException("AI service is currently unavailable", e);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             log.error("Failed to parse Groq API JSON: {}", e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Invalid JSON response from AI service", e);
+            throw new AiServiceException("Invalid JSON response from AI service", HttpStatus.BAD_GATEWAY, e);
         } catch (Exception e) {
             log.error("Groq API call failed: {}", e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to analyze writing: " + e.getMessage(), e);
+            throw new AiServiceException("Failed to analyze writing: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, e);
         }
-      }
+    }
+
+    private void validateApiKey() {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new AiServiceUnavailableException("Groq API key is not configured");
+        }
+    }
+
+    private String validateAndSanitizeRequest(WritingFeedbackRequest request) {
+        if (request == null || request.getText() == null) {
+            throw new InvalidWritingInputException("Text is required");
+        }
+        String text = request.getText().trim();
+        String[] words = text.split("\\s+");
+        if (words.length > 1000) {
+            throw new InvalidWritingInputException("Text must not exceed 1000 words");
+        }
+
+        String lowerText = text.toLowerCase();
+        if (lowerText.contains("ignore previous instructions") ||
+            lowerText.contains("ignore the instructions above") ||
+            lowerText.contains("</user_text>")) {
+            throw new InvalidWritingInputException("Prompt injection detected. Request rejected.");
+        }
+        return text;
+    }
+
+    private String resolveUserId() {
+        return SecurityContextHolder.getContext().getAuthentication() != null
+            ? SecurityContextHolder.getContext().getAuthentication().getName()
+            : "anonymous";
+    }
+
+    private void enforceRateLimit(String userId) {
+        if (redisTemplate == null) {
+            log.warn("StringRedisTemplate is not configured, bypassing AI rate limit checks.");
+            return;
+        }
+
+        try {
+            String redisKey = "rate_limit:writing:" + userId;
+            Long currentVal = redisTemplate.execute(
+                RATE_LIMIT_SCRIPT,
+                java.util.Collections.singletonList(redisKey),
+                "3600"
+            );
+
+            if (currentVal == null) {
+                log.warn("Redis rate limiter returned null count for user: {}, bypassing checks.", userId);
+            } else if (currentVal > 5) {
+                throw new AiRateLimitExceededException("Rate limit exceeded. Maximum 5 requests per hour.");
+            }
+        } catch (DomainException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Rate limit service unavailable, allowing request for user: {}. Error: {}", userId, e.getMessage());
+        }
+    }
+
+    private ResponseEntity<String> executeGroqApiCall(Map<String, Object> body, HttpHeaders headers) {
+        try {
+            return restTemplate.exchange(
+                apiUrl,
+                HttpMethod.POST,
+                new HttpEntity<>(body, headers),
+                String.class
+            );
+        } catch (HttpStatusCodeException e) {
+            String activeModel = (String) body.get("model");
+            if (fallbackModel != null && !fallbackModel.isBlank() && !fallbackModel.equalsIgnoreCase(activeModel)) {
+                log.warn("Groq API call with model '{}' failed (HTTP {}). Retrying with fallback model '{}'.",
+                    activeModel, e.getStatusCode(), fallbackModel);
+                body.put("model", fallbackModel);
+                return restTemplate.exchange(
+                    apiUrl,
+                    HttpMethod.POST,
+                    new HttpEntity<>(body, headers),
+                    String.class
+                );
+            }
+            throw e;
+        }
+    }
+
+    private String stripMarkdownJsonWrapper(String content) {
+        if (content == null) {
+            return "";
+        }
+        String trimmed = content.trim();
+        if (trimmed.startsWith("```json")) {
+            trimmed = trimmed.substring(7);
+        } else if (trimmed.startsWith("```")) {
+            trimmed = trimmed.substring(3);
+        }
+        if (trimmed.endsWith("```")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 3);
+        }
+        return trimmed.trim();
+    }
 
     private String buildSystemPrompt(String taskType, String targetLevel) {
         return """
@@ -253,3 +306,4 @@ public class GroqService {
         return list;
     }
 }
+

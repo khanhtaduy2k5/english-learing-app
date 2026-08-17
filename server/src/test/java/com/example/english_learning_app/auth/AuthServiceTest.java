@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,8 +13,9 @@ import static org.mockito.Mockito.when;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.example.english_learning_app.common.exception.EmailAlreadyInUseException;
+import com.example.english_learning_app.common.exception.InvalidCredentialsException;
 import com.example.english_learning_app.user.User;
 import com.example.english_learning_app.user.UserRepository;
 
@@ -32,9 +34,9 @@ class AuthServiceTest {
     passwordEncoder = mock(PasswordEncoder.class);
     redisTemplate = mock(StringRedisTemplate.class);
     valueOperations = mock(ValueOperations.class);
-    
+
     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-    
+
     authService = new AuthService(
         userRepository, 
         passwordEncoder, 
@@ -63,11 +65,24 @@ class AuthServiceTest {
   }
 
   @Test
+  void loginFailsWhenInvalidPassword() {
+    User mockUser = mock(User.class);
+    when(mockUser.getPassword()).thenReturn("encodedpass");
+
+    when(userRepository.findByEmailIgnoreCase("student@example.com")).thenReturn(Optional.of(mockUser));
+    when(passwordEncoder.matches("wrongpass", "encodedpass")).thenReturn(false);
+
+    assertThrows(InvalidCredentialsException.class, () -> {
+      authService.login("student@example.com", "wrongpass");
+    });
+  }
+
+  @Test
   void registerFailsWhenEmailExists() {
     when(userRepository.findByEmailIgnoreCase("learner@example.com")).thenReturn(Optional.of(mock(User.class)));
-    
-    org.junit.jupiter.api.Assertions.assertThrows(ResponseStatusException.class, () -> {
-        authService.register("Nguyen Van A", "learner@example.com", "password123");
+
+    assertThrows(EmailAlreadyInUseException.class, () -> {
+      authService.register("Nguyen Van A", "learner@example.com", "password123");
     });
   }
 
@@ -105,3 +120,4 @@ class AuthServiceTest {
     authService.logout("some-refresh-token");
   }
 }
+

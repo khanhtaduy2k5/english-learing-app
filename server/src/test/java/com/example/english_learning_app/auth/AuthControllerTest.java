@@ -5,13 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
 
+import com.example.english_learning_app.auth.dto.AuthResponse;
+import com.example.english_learning_app.auth.dto.LogoutResponse;
+import com.example.english_learning_app.auth.dto.UserDto;
+
 class AuthControllerTest {
 
   private final AuthController authController = new AuthController(null);
 
   @Test
   void userDtoHoldsAllFields() {
-    var dto = new AuthController.UserDto("user-1", "user@example.com", "Test User");
+    var dto = new UserDto("user-1", "user@example.com", "Test User");
 
     assertEquals("user-1", dto.id());
     assertEquals("user@example.com", dto.email());
@@ -20,8 +24,8 @@ class AuthControllerTest {
 
   @Test
   void authResponseContainsTokenAndUser() {
-    var user = new AuthController.UserDto("u1", "e@mail.com", "Name");
-    var response = new AuthController.AuthResponse("my-token", user);
+    var user = new UserDto("u1", "e@mail.com", "Name");
+    var response = new AuthResponse("my-token", user);
 
     assertEquals("my-token", response.token());
     assertNotNull(response.user());
@@ -30,8 +34,9 @@ class AuthControllerTest {
 
   @Test
   void logoutResponseContainsMessage() {
-    var response = new AuthController.LogoutResponse("Logged out");
+    var response = new LogoutResponse("Logged out");
 
     assertEquals("Logged out", response.message());
   }
 }
+

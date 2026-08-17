@@ -57,6 +57,8 @@ class A04_InsecureDesignTest {
                     """))
             .andReturn().getResponse().getContentAsString();
 
-        assertThat(result1).isEqualTo(result2);
+        var json1 = result1.replaceAll("\"timestamp\":\"[^\"]+\"", "");
+        var json2 = result2.replaceAll("\"timestamp\":\"[^\"]+\"", "");
+        assertThat(json1).isEqualTo(json2);
     }
 }

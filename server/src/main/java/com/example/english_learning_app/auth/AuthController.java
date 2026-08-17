@@ -1,42 +1,55 @@
 package com.example.english_learning_app.auth;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.example.english_learning_app.auth.dto.AuthRequest;
+import com.example.english_learning_app.auth.dto.AuthResponse;
+import com.example.english_learning_app.auth.dto.LogoutResponse;
+import com.example.english_learning_app.auth.dto.RegisterRequest;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Auth", description = "Authentication endpoints for login, registration, and logout")
 public class AuthController {
 
+  private static final long REFRESH_TOKEN_MAX_AGE_SECONDS = 604800; // 7 days
+
   private final AuthService authService;
 
   public AuthController(AuthService authService) {
     this.authService = authService;
   }
+
   @PostMapping("/login")
   @Operation(summary = "Login", description = "Return a demo JWT token and user payload for the provided credentials, sets HttpOnly refresh token cookie")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid login request")
+      @ApiResponse(responseCode = "400", description = "Invalid login request"),
+      @ApiResponse(responseCode = "401", description = "Invalid credentials")
   })
   public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
     var tokenPair = authService.login(request.email(), request.password());
-    var cookie = createRefreshTokenCookie(tokenPair.refreshToken(), 604800); // 7 days
+    var cookie = createRefreshTokenCookie(tokenPair.refreshToken(), REFRESH_TOKEN_MAX_AGE_SECONDS);
     return ResponseEntity.ok()
-        .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(new AuthResponse(tokenPair.accessToken(), tokenPair.user()));
   }
 
@@ -44,13 +57,14 @@ public class AuthController {
   @Operation(summary = "Register", description = "Create a demo account and return a JWT token plus user profile, sets HttpOnly refresh token cookie")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Registration successful", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid registration request")
+      @ApiResponse(responseCode = "400", description = "Invalid registration request"),
+      @ApiResponse(responseCode = "409", description = "Email already in use")
   })
   public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
     var tokenPair = authService.register(request.name(), request.email(), request.password());
-    var cookie = createRefreshTokenCookie(tokenPair.refreshToken(), 604800); // 7 days
+    var cookie = createRefreshTokenCookie(tokenPair.refreshToken(), REFRESH_TOKEN_MAX_AGE_SECONDS);
     return ResponseEntity.ok()
-        .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(new AuthResponse(tokenPair.accessToken(), tokenPair.user()));
   }
 
@@ -60,11 +74,11 @@ public class AuthController {
       @ApiResponse(responseCode = "200", description = "Token refreshed successfully", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
       @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
   })
-  public ResponseEntity<AuthResponse> refresh(@org.springframework.web.bind.annotation.CookieValue(value = "refreshToken", required = false) String refreshToken) {
+  public ResponseEntity<AuthResponse> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
     var tokenPair = authService.refresh(refreshToken);
-    var cookie = createRefreshTokenCookie(tokenPair.refreshToken(), 604800); // 7 days
+    var cookie = createRefreshTokenCookie(tokenPair.refreshToken(), REFRESH_TOKEN_MAX_AGE_SECONDS);
     return ResponseEntity.ok()
-        .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(new AuthResponse(tokenPair.accessToken(), tokenPair.user()));
   }
 
@@ -73,29 +87,27 @@ public class AuthController {
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Logout successful", content = @Content(schema = @Schema(implementation = LogoutResponse.class)))
   })
-  public ResponseEntity<LogoutResponse> logout(@org.springframework.web.bind.annotation.CookieValue(value = "refreshToken", required = false) String refreshToken) {
+  public ResponseEntity<LogoutResponse> logout(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
     authService.logout(refreshToken);
     var cookie = createRefreshTokenCookie("", 0); // Delete cookie
     return ResponseEntity.ok()
-        .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+        .header(HttpHeaders.SET_COOKIE, cookie.toString())
         .body(new LogoutResponse("Logged out"));
   }
 
-  private org.springframework.http.ResponseCookie createRefreshTokenCookie(String refreshToken, long maxAgeSeconds) {
+  private ResponseCookie createRefreshTokenCookie(String refreshToken, long maxAgeSeconds) {
     boolean isSecure = false;
     try {
-      org.springframework.web.context.request.RequestAttributes attrs = 
-          org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-      if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
-        jakarta.servlet.http.HttpServletRequest req = 
-            ((org.springframework.web.context.request.ServletRequestAttributes) attrs).getRequest();
+      var attrs = RequestContextHolder.getRequestAttributes();
+      if (attrs instanceof ServletRequestAttributes servletAttrs) {
+        HttpServletRequest req = servletAttrs.getRequest();
         isSecure = req.isSecure() || "https".equalsIgnoreCase(req.getHeader("X-Forwarded-Proto"));
       }
     } catch (Exception e) {
-      // Fallback
+      // Fallback if called outside HTTP request context
     }
 
-    return org.springframework.http.ResponseCookie.from("refreshToken", refreshToken)
+    return ResponseCookie.from("refreshToken", refreshToken)
         .httpOnly(true)
         .secure(isSecure)
         .sameSite("Lax")
@@ -103,33 +115,5 @@ public class AuthController {
         .maxAge(maxAgeSeconds)
         .build();
   }
-
-  public record AuthRequest(
-      @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Email
-      @Schema(description = "User email address", example = "student@example.com") String email,
-      @jakarta.validation.constraints.NotBlank
-      @Schema(description = "User password", example = "password123") String password) {}
-
-  public record RegisterRequest(
-      @NotBlank(message = "Name is required") 
-      @jakarta.validation.constraints.Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "Invalid characters in name")
-      @Schema(description = "Display name", example = "Nguyen Van A") String name,
-      @NotBlank(message = "Email is required") 
-      @Email(message = "Invalid email format") 
-      @Schema(description = "User email address", example = "student@example.com") String email,
-      @NotBlank(message = "Password is required")
-      @jakarta.validation.constraints.Size(min = 8, message = "Password must be at least 8 characters")
-      @Schema(description = "User password", example = "password123") String password) {}
-
-  public record UserDto(
-      @Schema(description = "User identifier", example = "user-1") String id,
-      @Schema(description = "User email address", example = "student@example.com") String email,
-      @Schema(description = "User display name", example = "Nguyen Van A") String name) {}
-
-  public record AuthResponse(
-      @Schema(description = "JWT token used by the client", example = "demo-token") String token,
-      @Schema(description = "Authenticated user profile") UserDto user) {}
-
-  public record LogoutResponse(
-      @Schema(description = "Logout result message", example = "Logged out") String message) {}
 }
+

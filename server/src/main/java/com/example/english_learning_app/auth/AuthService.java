@@ -11,11 +11,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.example.english_learning_app.auth.dto.TokenPair;
+import com.example.english_learning_app.auth.dto.UserDto;
+import com.example.english_learning_app.common.exception.BadRequestException;
+import com.example.english_learning_app.common.exception.DomainException;
+import com.example.english_learning_app.common.exception.EmailAlreadyInUseException;
+import com.example.english_learning_app.common.exception.InvalidCredentialsException;
+import com.example.english_learning_app.common.exception.InvalidTokenException;
+import com.example.english_learning_app.common.exception.UserNotFoundException;
 import com.example.english_learning_app.user.User;
 import com.example.english_learning_app.user.UserRepository;
 
@@ -27,6 +33,8 @@ import io.jsonwebtoken.security.Keys;
 public class AuthService {
 
   private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+  private static final String DEFAULT_SECRET = "defaultSecretKeyWithAtLeast32CharactersForTesting123";
+  private static final String REFRESH_TOKEN_REDIS_PREFIX = "refresh_token:user:";
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -34,8 +42,6 @@ public class AuthService {
   private final SecretKey key;
   private final long accessExpiration;
   private final long refreshExpiration;
-
-  private static final String DEFAULT_SECRET = "defaultSecretKeyWithAtLeast32CharactersForTesting123";
 
   public AuthService(UserRepository userRepository,
                      PasswordEncoder passwordEncoder,
@@ -54,14 +60,12 @@ public class AuthService {
     this.refreshExpiration = refreshExpiration;
   }
 
-  public record TokenPair(String accessToken, String refreshToken, AuthController.UserDto user) {}
-
   public TokenPair login(String email, String password) {
     var user = userRepository.findByEmailIgnoreCase(email)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-    
+        .orElseThrow(InvalidCredentialsException::new);
+
     if (!passwordEncoder.matches(password, user.getPassword())) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+      throw new InvalidCredentialsException();
     }
 
     return generateTokenPair(user);
@@ -71,11 +75,11 @@ public class AuthService {
     var normalizedEmail = email.trim().toLowerCase();
 
     if (userRepository.findByEmailIgnoreCase(normalizedEmail).isPresent()) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+      throw new EmailAlreadyInUseException();
     }
 
     if (password == null || password.length() < 8) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters");
+      throw new BadRequestException("Password must be at least 8 characters");
     }
 
     User user = new User(name.trim(), normalizedEmail, passwordEncoder.encode(password));
@@ -86,7 +90,7 @@ public class AuthService {
 
   public TokenPair refresh(String refreshToken) {
     if (refreshToken == null || refreshToken.isBlank()) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
+      throw new InvalidTokenException("Missing refresh token");
     }
 
     try {
@@ -97,37 +101,35 @@ public class AuthService {
           .getPayload();
 
       String userId = claims.getSubject();
-      String jti = claims.getId(); // Token ID
+      String jti = claims.getId();
 
       if (userId == null || jti == null) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token payload");
+        throw new InvalidTokenException("Invalid refresh token payload");
       }
 
-      String redisKey = "refresh_token:user:" + userId;
+      String redisKey = REFRESH_TOKEN_REDIS_PREFIX + userId;
       String activeTokenId = redisTemplate != null ? redisTemplate.opsForValue().get(redisKey) : null;
 
       if (activeTokenId == null) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session expired or revoked");
+        throw new InvalidTokenException("Session expired or revoked");
       }
 
-      // Check for Replay Attack: if tokenId doesn't match activeTokenId, it means this token was already used!
       if (!jti.equals(activeTokenId)) {
         if (redisTemplate != null) {
-          redisTemplate.delete(redisKey); // Revoke all sessions for safety
+          redisTemplate.delete(redisKey);
         }
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token has been rotated (Replay Attack Detected)");
+        throw new InvalidTokenException("Token has been rotated (Replay Attack Detected)");
       }
 
       var user = userRepository.findById(userId)
-          .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+          .orElseThrow(UserNotFoundException::new);
 
       return generateTokenPair(user);
 
+    } catch (DomainException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof ResponseStatusException) {
-        throw (ResponseStatusException) e;
-      }
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired refresh token", e);
+      throw new InvalidTokenException("Invalid or expired refresh token", e);
     }
   }
 
@@ -145,10 +147,10 @@ public class AuthService {
 
       String userId = claims.getSubject();
       if (userId != null && redisTemplate != null) {
-        redisTemplate.delete("refresh_token:user:" + userId);
+        redisTemplate.delete(REFRESH_TOKEN_REDIS_PREFIX + userId);
       }
     } catch (Exception e) {
-      // Ignore exception on logout parsing
+      log.debug("Failed to parse token during logout: {}", e.getMessage());
     }
   }
 
@@ -159,7 +161,7 @@ public class AuthService {
 
     saveRefreshToken(user.getId(), tokenId);
 
-    var userDto = new AuthController.UserDto(user.getId(), user.getEmail(), user.getName());
+    var userDto = new UserDto(user.getId(), user.getEmail(), user.getName());
     return new TokenPair(accessToken, refreshToken, userDto);
   }
 
@@ -169,7 +171,7 @@ public class AuthService {
     }
 
     try {
-      String redisKey = "refresh_token:user:" + userId;
+      String redisKey = REFRESH_TOKEN_REDIS_PREFIX + userId;
       redisTemplate.opsForValue().set(redisKey, tokenId, refreshExpiration, TimeUnit.MILLISECONDS);
     } catch (RuntimeException exception) {
       log.warn("Skipping refresh-token persistence because Redis is unavailable", exception);
@@ -190,10 +192,11 @@ public class AuthService {
   private String generateRefreshToken(User user, String tokenId) {
     return Jwts.builder()
         .subject(user.getId())
-        .id(tokenId) // JWT ID
+        .id(tokenId)
         .issuedAt(new Date())
         .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
         .signWith(key)
         .compact();
   }
 }
+
