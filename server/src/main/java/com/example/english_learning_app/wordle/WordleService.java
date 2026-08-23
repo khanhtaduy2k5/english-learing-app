@@ -13,8 +13,11 @@ import java.util.Random;
 @Service
 public class WordleService {
 
+    public static final int WORD_LENGTH = 5;
+    public static final int MAX_ATTEMPTS = 6;
+
     private final Map<String, WordleGame> games = new ConcurrentHashMap<>();
-    
+
     // Rich vocabulary of 80 popular 5-letter English words
     private static final List<String> DICTIONARY = List.of(
         // Nature & Elements
@@ -56,45 +59,46 @@ public class WordleService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game is already finished");
         }
         
-        if (guess == null || !guess.matches("^[a-zA-Z]{5}$")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guess must be exactly 5 letters and contain only alphabetic characters");
+        if (guess == null || !guess.matches("^[a-zA-Z]{%d}$".formatted(WORD_LENGTH))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Guess must be exactly %d letters and contain only alphabetic characters".formatted(WORD_LENGTH));
         }
-        
+
         guess = guess.toUpperCase();
         game.addAttempt(guess);
-        
+
         List<LetterFeedback> feedback = generateFeedback(game.getTargetWord(), guess);
-        
+
         if (guess.equals(game.getTargetWord())) {
             game.setStatus(GameStatus.WON);
-        } else if (game.getAttempts().size() >= 6) {
+        } else if (game.getAttempts().size() >= MAX_ATTEMPTS) {
             game.setStatus(GameStatus.LOST);
         }
-        
+
         return new GuessResult(guess, feedback, game.getStatus());
     }
 
     public List<LetterFeedback> generateFeedback(String target, String guess) {
-        List<LetterFeedback> feedback = new ArrayList<>(5);
-        for (int i = 0; i < 5; i++) {
-            feedback.add(LetterFeedback.ABSENT); // Initialize
+        List<LetterFeedback> feedback = new ArrayList<>(WORD_LENGTH);
+        for (int i = 0; i < WORD_LENGTH; i++) {
+            feedback.add(LetterFeedback.ABSENT);
         }
-        
-        boolean[] targetUsed = new boolean[5];
-        
+
+        boolean[] targetUsed = new boolean[WORD_LENGTH];
+
         // First pass: Correct matches
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < WORD_LENGTH; i++) {
             if (guess.charAt(i) == target.charAt(i)) {
                 feedback.set(i, LetterFeedback.CORRECT);
                 targetUsed[i] = true;
             }
         }
-        
+
         // Second pass: Present matches
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < WORD_LENGTH; i++) {
             if (feedback.get(i) == LetterFeedback.CORRECT) continue;
-            
-            for (int j = 0; j < 5; j++) {
+
+            for (int j = 0; j < WORD_LENGTH; j++) {
                 if (!targetUsed[j] && guess.charAt(i) == target.charAt(j)) {
                     feedback.set(i, LetterFeedback.PRESENT);
                     targetUsed[j] = true;

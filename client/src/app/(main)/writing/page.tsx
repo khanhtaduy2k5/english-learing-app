@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isAxiosError } from "axios";
 import { apiClient } from "@/lib/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -23,6 +24,18 @@ interface WritingFeedback {
   correctedText: string;
 }
 
+interface ApiErrorResponse {
+  message?: string;
+}
+
+interface ScoreTierStyle {
+  text: string;
+  ring: string;
+  bg: string;
+  border: string;
+  label: string;
+}
+
 // ── Config ────────────────────────────────────────────────────────────────────
 const TASK_TYPES = [
   { value: "essay", label: "General Essay" },
@@ -34,39 +47,65 @@ const TASK_TYPES = [
 
 const TARGET_LEVELS = ["A2", "B1", "B2", "C1", "C2"];
 
+const MIN_ANALYSIS_CHARS = 10;
+const MAX_INPUT_CHARS = 5000;
+const CHAR_WARNING_THRESHOLD = 4500;
+
+const SCORE_RING_RADIUS = 45;
+
+const ANALYSIS_FAILED_MESSAGE = "Analysis failed. Please try again.";
+
+const SCORE_TIERS: Array<{ minScore: number } & ScoreTierStyle> = [
+  {
+    minScore: 85,
+    text: "text-emerald-400",
+    ring: "stroke-emerald-400",
+    bg: "from-emerald-500/20 to-green-500/10",
+    border: "border-emerald-500/20",
+    label: "Excellent",
+  },
+  {
+    minScore: 70,
+    text: "text-blue-400",
+    ring: "stroke-blue-400",
+    bg: "from-blue-500/20 to-cyan-500/10",
+    border: "border-blue-500/20",
+    label: "Good",
+  },
+  {
+    minScore: 55,
+    text: "text-amber-400",
+    ring: "stroke-amber-400",
+    bg: "from-amber-500/20 to-yellow-500/10",
+    border: "border-amber-500/20",
+    label: "Fair",
+  },
+];
+
+const DEFAULT_SCORE_TIER: ScoreTierStyle = {
+  text: "text-rose-400",
+  ring: "stroke-rose-400",
+  bg: "from-rose-500/20 to-pink-500/10",
+  border: "border-rose-500/20",
+  label: "Needs Work",
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function scoreColor(score: number) {
-  if (score >= 85)
-    return {
-      text: "text-emerald-400",
-      ring: "stroke-emerald-400",
-      bg: "from-emerald-500/20 to-green-500/10",
-      border: "border-emerald-500/20",
-      label: "Excellent",
-    };
-  if (score >= 70)
-    return {
-      text: "text-blue-400",
-      ring: "stroke-blue-400",
-      bg: "from-blue-500/20 to-cyan-500/10",
-      border: "border-blue-500/20",
-      label: "Good",
-    };
-  if (score >= 55)
-    return {
-      text: "text-amber-400",
-      ring: "stroke-amber-400",
-      bg: "from-amber-500/20 to-yellow-500/10",
-      border: "border-amber-500/20",
-      label: "Fair",
-    };
-  return {
-    text: "text-rose-400",
-    ring: "stroke-rose-400",
-    bg: "from-rose-500/20 to-pink-500/10",
-    border: "border-rose-500/20",
-    label: "Needs Work",
-  };
+function scoreColor(score: number): ScoreTierStyle {
+  return (
+    SCORE_TIERS.find((tier) => score >= tier.minScore) ?? DEFAULT_SCORE_TIER
+  );
+}
+
+function getAnalysisErrorMessage(err: unknown): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as ApiErrorResponse | undefined;
+    return data?.message || err.message || ANALYSIS_FAILED_MESSAGE;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return ANALYSIS_FAILED_MESSAGE;
 }
 
 function severityStyle(severity: string) {
@@ -93,6 +132,33 @@ function severityStyle(severity: string) {
 }
 
 // ── Sub-Components ────────────────────────────────────────────────────────────
+function ScoreRing({ score, colors }: { score: number; colors: ScoreTierStyle }) {
+  const circumference = 2 * Math.PI * SCORE_RING_RADIUS;
+  return (
+    <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
+      <circle
+        cx="50"
+        cy="50"
+        r={SCORE_RING_RADIUS}
+        fill="none"
+        strokeWidth="8"
+        className="stroke-white/5"
+      />
+      <circle
+        cx="50"
+        cy="50"
+        r={SCORE_RING_RADIUS}
+        fill="none"
+        strokeWidth="8"
+        className={`${colors.ring} transition-[stroke-dashoffset] duration-1000 ease-in-out`}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference - (score / 100) * circumference}
+      />
+    </svg>
+  );
+}
+
 function FeedbackCard({
   items,
   title,
@@ -165,7 +231,7 @@ export default function WritingPage() {
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
   const handleAnalyze = async () => {
-    if (!text.trim() || text.trim().length < 10) {
+    if (!text.trim() || text.trim().length < MIN_ANALYSIS_CHARS) {
       setError("Please write at least 10 characters before analyzing.");
       return;
     }
@@ -187,15 +253,14 @@ export default function WritingPage() {
           .getElementById("writing-results")
           ?.scrollIntoView({ behavior: "smooth" });
       }, 100);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Analysis failed. Please try again.");
+    } catch (err: unknown) {
+      setError(getAnalysisErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
   };
 
   const colors = feedback ? scoreColor(feedback.overallScore) : null;
-  const circumference = 2 * Math.PI * 45; // r=45
 
   return (
     <div className="p-8 min-h-screen">
@@ -239,13 +304,17 @@ export default function WritingPage() {
               onChange={(e) => setText(e.target.value)}
               placeholder="Write or paste your English text here… (minimum 10 characters)"
               rows={14}
-              maxLength={5000}
+              maxLength={MAX_INPUT_CHARS}
               className="w-full p-5 bg-card/80 dark:bg-white/[0.03] border border-border rounded-2xl text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all leading-relaxed text-sm"
             />
             <div className="absolute bottom-4 right-4 flex items-center gap-3 text-xs text-muted-foreground">
               <span>{wordCount} words</span>
-              <span className={charCount > 4500 ? "text-amber-400" : ""}>
-                {charCount}/5000
+              <span
+                className={
+                  charCount > CHAR_WARNING_THRESHOLD ? "text-amber-400" : ""
+                }
+              >
+                {charCount}/{MAX_INPUT_CHARS}
               </span>
             </div>
           </div>
@@ -325,7 +394,9 @@ export default function WritingPage() {
             <button
               id="analyze-btn"
               onClick={handleAnalyze}
-              disabled={isLoading || text.trim().length < 10}
+              disabled={
+                isLoading || text.trim().length < MIN_ANALYSIS_CHARS
+              }
               className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
@@ -404,30 +475,7 @@ export default function WritingPage() {
             <div
               className={`flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br ${colors.bg} border ${colors.border}`}
             >
-              <svg className="w-36 h-36 -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  strokeWidth="8"
-                  className="stroke-white/5"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  strokeWidth="8"
-                  className={`${colors.ring} transition-[stroke-dashoffset] duration-1000 ease-in-out`}
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={
-                    circumference -
-                    (feedback.overallScore / 100) * circumference
-                  }
-                />
-              </svg>
+              <ScoreRing score={feedback.overallScore} colors={colors} />
               <div className="text-center -mt-28">
                 <p className={`text-5xl font-black ${colors.text}`}>
                   {feedback.overallScore}

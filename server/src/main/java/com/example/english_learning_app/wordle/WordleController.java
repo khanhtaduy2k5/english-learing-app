@@ -28,23 +28,29 @@ public class WordleController {
 
     @GetMapping("/{gameId}")
     public ResponseEntity<WordleGameDto> getGame(@PathVariable String gameId) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = currentUserId();
         WordleGame game = wordleService.getGame(gameId);
-        if (game.getUserId() != null && !game.getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this game");
-        }
+        requireOwnership(game, userId);
         return ResponseEntity.ok(mapToDto(game));
     }
 
     @PostMapping("/{gameId}/guess")
     public ResponseEntity<GuessResult> submitGuess(@PathVariable String gameId, @RequestBody GuessRequest request) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userId = currentUserId();
         WordleGame game = wordleService.getGame(gameId);
+        requireOwnership(game, userId);
+        GuessResult result = wordleService.submitGuess(gameId, request.guess());
+        return ResponseEntity.ok(result);
+    }
+
+    private String currentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private void requireOwnership(WordleGame game, String userId) {
         if (game.getUserId() != null && !game.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this game");
         }
-        GuessResult result = wordleService.submitGuess(gameId, request.guess());
-        return ResponseEntity.ok(result);
     }
 
     private WordleGameDto mapToDto(WordleGame game) {
@@ -64,7 +70,7 @@ public class WordleController {
             game.getId(),
             game.getStatus(),
             guesses,
-            6, // maxGuesses
+            WordleService.MAX_ATTEMPTS,
             targetWord
         );
     }

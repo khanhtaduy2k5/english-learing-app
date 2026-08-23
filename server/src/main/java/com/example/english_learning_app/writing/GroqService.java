@@ -27,6 +27,7 @@ import com.example.english_learning_app.common.exception.AiServiceException;
 import com.example.english_learning_app.common.exception.AiServiceUnavailableException;
 import com.example.english_learning_app.common.exception.DomainException;
 import com.example.english_learning_app.common.exception.InvalidWritingInputException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,6 +38,25 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class GroqService {
+
+    private static final int MAX_INPUT_WORDS = 1000;
+    private static final int MAX_REQUESTS_PER_WINDOW = 5;
+    private static final String RATE_LIMIT_WINDOW_SECONDS = "3600";
+    private static final String RATE_LIMIT_KEY_PREFIX = "rate_limit:writing:";
+    private static final double GROQ_TEMPERATURE = 0.3;
+    private static final int DEFAULT_OVERALL_SCORE = 70;
+    private static final String DEFAULT_BAND = "B2";
+    private static final String DEFAULT_SEVERITY = "info";
+    private static final String MODEL_FIELD = "model";
+
+    private static final String JSON_FENCE_PREFIX = "```json";
+    private static final String CODE_FENCE_PREFIX = "```";
+
+    private static final List<String> INJECTION_MARKERS = List.of(
+        "ignore previous instructions",
+        "ignore the instructions above",
+        "</user_text>"
+    );
 
     @Value("${groq.api.key:}")
     private String apiKey;
@@ -52,7 +72,7 @@ public class GroqService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final WritingFeedbackLogRepository logRepository;
+    private final WritingFeedbackLogRepository feedbackLogRepository;
     private final StringRedisTemplate redisTemplate;
 
     private static final RedisScript<Long> RATE_LIMIT_SCRIPT = new DefaultRedisScript<>(
@@ -67,67 +87,12 @@ public class GroqService {
     @Transactional
     public WritingFeedbackResponse analyzeWriting(WritingFeedbackRequest request) {
         validateApiKey();
-        String text = validateAndSanitizeRequest(request);
+        String text = sanitizeText(request);
         String userId = resolveUserId();
         enforceRateLimit(userId);
 
-        String systemPrompt = buildSystemPrompt(request.getTaskType(), request.getTargetLevel());
-        String userContent = "Please analyze this English writing inside the <user_text> tag:\n\n<user_text>" + text + "</user_text>";
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("model", model);
-        body.put("messages", List.of(
-            Map.of("role", "system", "content", systemPrompt),
-            Map.of("role", "user", "content", userContent)
-        ));
-        body.put("temperature", 0.3);
-        body.put("response_format", Map.of("type", "json_object"));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);
-
         try {
-            ResponseEntity<String> response = executeGroqApiCall(body, headers);
-
-            JsonNode root = objectMapper.readTree(response.getBody());
-            JsonNode choices = root.path("choices");
-            if (choices.isMissingNode() || !choices.isArray() || choices.isEmpty()) {
-                log.error("Invalid response from Groq API (no choices): {}", response.getBody());
-                throw new AiServiceException("Invalid response from AI service", HttpStatus.BAD_GATEWAY);
-            }
-
-            JsonNode message = choices.get(0).path("message");
-            if (message.isMissingNode()) {
-                log.error("Invalid response from Groq API (no message): {}", response.getBody());
-                throw new AiServiceException("Invalid response from AI service", HttpStatus.BAD_GATEWAY);
-            }
-
-            String content = stripMarkdownJsonWrapper(message.path("content").asText());
-            WritingFeedbackResponse feedbackResponse = parseGroqResponse(content);
-
-            // Extract Token Usage
-            JsonNode usageNode = root.path("usage");
-            int promptTokens = usageNode.path("prompt_tokens").asInt(0);
-            int completionTokens = usageNode.path("completion_tokens").asInt(0);
-            int totalTokens = usageNode.path("total_tokens").asInt(0);
-
-            // Audit Log
-            WritingFeedbackLog feedbackLog = WritingFeedbackLog.builder()
-                .userId(userId)
-                .inputText(text)
-                .overallScore(feedbackResponse.getOverallScore())
-                .band(feedbackResponse.getBand())
-                .summary(feedbackResponse.getSummary())
-                .feedbackJson(content)
-                .promptTokens(promptTokens)
-                .completionTokens(completionTokens)
-                .totalTokens(totalTokens)
-                .build();
-            logRepository.save(feedbackLog);
-
-            return feedbackResponse;
-
+            return gradeWritingAndRecord(text, request, userId);
         } catch (DomainException e) {
             throw e;
         } catch (HttpStatusCodeException e) {
@@ -136,7 +101,7 @@ public class GroqService {
         } catch (ResourceAccessException e) {
             log.error("Groq API connection failure: {}", e.getMessage(), e);
             throw new AiServiceUnavailableException("AI service is currently unavailable", e);
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             log.error("Failed to parse Groq API JSON: {}", e.getMessage(), e);
             throw new AiServiceException("Invalid JSON response from AI service", HttpStatus.BAD_GATEWAY, e);
         } catch (Exception e) {
@@ -145,29 +110,49 @@ public class GroqService {
         }
     }
 
+    private WritingFeedbackResponse gradeWritingAndRecord(String text, WritingFeedbackRequest request, String userId)
+            throws JsonProcessingException {
+        JsonNode groqResponse = requestFeedbackFromGroq(text, request.getTaskType(), request.getTargetLevel());
+        String feedbackJson = extractFeedbackJson(groqResponse);
+        WritingFeedbackResponse feedback = parseGroqResponse(feedbackJson);
+        recordAuditLog(userId, text, feedbackJson, groqResponse.path("usage"), feedback);
+        return feedback;
+    }
+
+    private JsonNode requestFeedbackFromGroq(String text, String taskType, String targetLevel)
+            throws JsonProcessingException {
+        String systemPrompt = buildSystemPrompt(taskType, targetLevel);
+        Map<String, Object> requestBody = buildChatRequestBody(systemPrompt, text);
+        ResponseEntity<String> response = executeGroqApiCall(requestBody, buildHttpHeaders());
+        return objectMapper.readTree(response.getBody());
+    }
+
     private void validateApiKey() {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new AiServiceUnavailableException("Groq API key is not configured");
         }
     }
 
-    private String validateAndSanitizeRequest(WritingFeedbackRequest request) {
+    private String sanitizeText(WritingFeedbackRequest request) {
         if (request == null || request.getText() == null) {
             throw new InvalidWritingInputException("Text is required");
         }
         String text = request.getText().trim();
-        String[] words = text.split("\\s+");
-        if (words.length > 1000) {
-            throw new InvalidWritingInputException("Text must not exceed 1000 words");
+
+        int wordCount = text.split("\\s+").length;
+        if (wordCount > MAX_INPUT_WORDS) {
+            throw new InvalidWritingInputException("Text must not exceed %d words".formatted(MAX_INPUT_WORDS));
         }
 
-        String lowerText = text.toLowerCase();
-        if (lowerText.contains("ignore previous instructions") ||
-            lowerText.contains("ignore the instructions above") ||
-            lowerText.contains("</user_text>")) {
+        if (containsInjectionMarker(text)) {
             throw new InvalidWritingInputException("Prompt injection detected. Request rejected.");
         }
         return text;
+    }
+
+    private boolean containsInjectionMarker(String text) {
+        String lowerText = text.toLowerCase();
+        return INJECTION_MARKERS.stream().anyMatch(lowerText::contains);
     }
 
     private String resolveUserId() {
@@ -177,23 +162,13 @@ public class GroqService {
     }
 
     private void enforceRateLimit(String userId) {
-        if (redisTemplate == null) {
-            log.warn("StringRedisTemplate is not configured, bypassing AI rate limit checks.");
-            return;
-        }
-
         try {
-            String redisKey = "rate_limit:writing:" + userId;
-            Long currentVal = redisTemplate.execute(
-                RATE_LIMIT_SCRIPT,
-                java.util.Collections.singletonList(redisKey),
-                "3600"
-            );
+            String redisKey = RATE_LIMIT_KEY_PREFIX + userId;
+            Long requestCount = redisTemplate.execute(RATE_LIMIT_SCRIPT, List.of(redisKey), RATE_LIMIT_WINDOW_SECONDS);
 
-            if (currentVal == null) {
-                log.warn("Redis rate limiter returned null count for user: {}, bypassing checks.", userId);
-            } else if (currentVal > 5) {
-                throw new AiRateLimitExceededException("Rate limit exceeded. Maximum 5 requests per hour.");
+            if (requestCount != null && requestCount > MAX_REQUESTS_PER_WINDOW) {
+                throw new AiRateLimitExceededException(
+                    "Rate limit exceeded. Maximum %d requests per hour.".formatted(MAX_REQUESTS_PER_WINDOW));
             }
         } catch (DomainException e) {
             throw e;
@@ -202,29 +177,70 @@ public class GroqService {
         }
     }
 
+    private Map<String, Object> buildChatRequestBody(String systemPrompt, String userContent) {
+        Map<String, Object> body = new HashMap<>();
+        body.put(MODEL_FIELD, model);
+        body.put("messages", List.of(
+            Map.of("role", "system", "content", systemPrompt),
+            Map.of("role", "user", "content", userContent)
+        ));
+        body.put("temperature", GROQ_TEMPERATURE);
+        body.put("response_format", Map.of("type", "json_object"));
+        return body;
+    }
+
+    private HttpHeaders buildHttpHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+        return headers;
+    }
+
     private ResponseEntity<String> executeGroqApiCall(Map<String, Object> body, HttpHeaders headers) {
         try {
-            return restTemplate.exchange(
-                apiUrl,
-                HttpMethod.POST,
-                new HttpEntity<>(body, headers),
-                String.class
-            );
+            return postToGroq(body, headers);
         } catch (HttpStatusCodeException e) {
-            String activeModel = (String) body.get("model");
-            if (fallbackModel != null && !fallbackModel.isBlank() && !fallbackModel.equalsIgnoreCase(activeModel)) {
-                log.warn("Groq API call with model '{}' failed (HTTP {}). Retrying with fallback model '{}'.",
-                    activeModel, e.getStatusCode(), fallbackModel);
-                body.put("model", fallbackModel);
-                return restTemplate.exchange(
-                    apiUrl,
-                    HttpMethod.POST,
-                    new HttpEntity<>(body, headers),
-                    String.class
-                );
+            String activeModel = (String) body.get(MODEL_FIELD);
+            if (!canFallBackToAlternativeModel(activeModel)) {
+                throw e;
             }
-            throw e;
+            log.warn("Groq API call with model '{}' failed (HTTP {}). Retrying with fallback model '{}'.",
+                activeModel, e.getStatusCode(), fallbackModel);
+            body.put(MODEL_FIELD, fallbackModel);
+            return postToGroq(body, headers);
         }
+    }
+
+    private boolean canFallBackToAlternativeModel(String activeModel) {
+        return fallbackModel != null && !fallbackModel.isBlank() && !fallbackModel.equalsIgnoreCase(activeModel);
+    }
+
+    private ResponseEntity<String> postToGroq(Map<String, Object> body, HttpHeaders headers) {
+        return restTemplate.exchange(apiUrl, HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
+    }
+
+    private String extractFeedbackJson(JsonNode groqResponse) {
+        JsonNode message = groqResponse.path("choices").path(0).path("message");
+        if (message.isMissingNode()) {
+            log.error("Invalid response from Groq API (missing choices/message): {}", groqResponse);
+            throw new AiServiceException("Invalid response from AI service", HttpStatus.BAD_GATEWAY);
+        }
+        return stripMarkdownJsonWrapper(message.path("content").asText());
+    }
+
+    private void recordAuditLog(String userId, String inputText, String feedbackJson, JsonNode usage,
+            WritingFeedbackResponse feedback) {
+        feedbackLogRepository.save(WritingFeedbackLog.builder()
+            .userId(userId)
+            .inputText(inputText)
+            .overallScore(feedback.getOverallScore())
+            .band(feedback.getBand())
+            .summary(feedback.getSummary())
+            .feedbackJson(feedbackJson)
+            .promptTokens(usage.path("prompt_tokens").asInt(0))
+            .completionTokens(usage.path("completion_tokens").asInt(0))
+            .totalTokens(usage.path("total_tokens").asInt(0))
+            .build());
     }
 
     private String stripMarkdownJsonWrapper(String content) {
@@ -232,13 +248,13 @@ public class GroqService {
             return "";
         }
         String trimmed = content.trim();
-        if (trimmed.startsWith("```json")) {
-            trimmed = trimmed.substring(7);
-        } else if (trimmed.startsWith("```")) {
-            trimmed = trimmed.substring(3);
+        if (trimmed.startsWith(JSON_FENCE_PREFIX)) {
+            trimmed = trimmed.substring(JSON_FENCE_PREFIX.length());
+        } else if (trimmed.startsWith(CODE_FENCE_PREFIX)) {
+            trimmed = trimmed.substring(CODE_FENCE_PREFIX.length());
         }
-        if (trimmed.endsWith("```")) {
-            trimmed = trimmed.substring(0, trimmed.length() - 3);
+        if (trimmed.endsWith(CODE_FENCE_PREFIX)) {
+            trimmed = trimmed.substring(0, trimmed.length() - CODE_FENCE_PREFIX.length());
         }
         return trimmed.trim();
     }
@@ -269,12 +285,12 @@ public class GroqService {
             """.formatted(taskType, targetLevel);
     }
 
-    private WritingFeedbackResponse parseGroqResponse(String json) throws Exception {
+    private WritingFeedbackResponse parseGroqResponse(String json) throws JsonProcessingException {
         JsonNode node = objectMapper.readTree(json);
 
         return WritingFeedbackResponse.builder()
-            .overallScore(node.path("overallScore").asInt(70))
-            .band(node.path("band").asText("B2"))
+            .overallScore(node.path("overallScore").asInt(DEFAULT_OVERALL_SCORE))
+            .band(node.path("band").asText(DEFAULT_BAND))
             .summary(node.path("summary").asText(""))
             .grammarErrors(parseFeedbackItems(node.path("grammarErrors")))
             .vocabularySuggestions(parseFeedbackItems(node.path("vocabularySuggestions")))
@@ -285,25 +301,24 @@ public class GroqService {
             .build();
     }
 
-    private List<WritingFeedbackResponse.FeedbackItem> parseFeedbackItems(JsonNode arr) {
+    private List<WritingFeedbackResponse.FeedbackItem> parseFeedbackItems(JsonNode itemsNode) {
         List<WritingFeedbackResponse.FeedbackItem> items = new ArrayList<>();
-        if (arr != null && arr.isArray()) {
-            arr.forEach(n -> items.add(WritingFeedbackResponse.FeedbackItem.builder()
-                .original(n.path("original").asText(""))
-                .suggestion(n.path("suggestion").asText(""))
-                .explanation(n.path("explanation").asText(""))
-                .severity(n.path("severity").asText("info"))
+        if (itemsNode != null && itemsNode.isArray()) {
+            itemsNode.forEach(item -> items.add(WritingFeedbackResponse.FeedbackItem.builder()
+                .original(item.path("original").asText(""))
+                .suggestion(item.path("suggestion").asText(""))
+                .explanation(item.path("explanation").asText(""))
+                .severity(item.path("severity").asText(DEFAULT_SEVERITY))
                 .build()));
         }
         return items;
     }
 
-    private List<String> parseStringList(JsonNode arr) {
-        List<String> list = new ArrayList<>();
-        if (arr != null && arr.isArray()) {
-            arr.forEach(n -> list.add(n.asText()));
+    private List<String> parseStringList(JsonNode arrayNode) {
+        List<String> values = new ArrayList<>();
+        if (arrayNode != null && arrayNode.isArray()) {
+            arrayNode.forEach(value -> values.add(value.asText()));
         }
-        return list;
+        return values;
     }
 }
-

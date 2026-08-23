@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { isAxiosError } from "axios";
 import { apiClient } from "@/lib/api";
 import { WordleGame, LetterFeedback } from "@/types/wordle";
 import WordleBoard from "@/components/wordle/WordleBoard";
 import WordleKeyboard from "@/components/wordle/WordleKeyboard";
+
+const WORDLE_STORAGE_KEY = "wordleGameId";
+const WORD_LENGTH = 5;
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as { message?: string } | undefined;
+    return data?.message || fallback;
+  }
+  return fallback;
+}
 
 export default function WordlePage() {
   const [game, setGame] = useState<WordleGame | null>(null);
@@ -19,9 +31,9 @@ export default function WordlePage() {
       const newGame = await apiClient.startWordleGame();
       setGame(newGame);
       setCurrentGuess("");
-      localStorage.setItem("wordleGameId", newGame.id);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to start game");
+      localStorage.setItem(WORDLE_STORAGE_KEY, newGame.id);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to start game"));
     } finally {
       setLoading(false);
     }
@@ -29,7 +41,7 @@ export default function WordlePage() {
 
   useEffect(() => {
     const initGame = async () => {
-      const savedId = localStorage.getItem("wordleGameId");
+      const savedId = localStorage.getItem(WORDLE_STORAGE_KEY);
       if (savedId) {
         try {
           const savedGame = await apiClient.getWordleGame(savedId);
@@ -52,15 +64,14 @@ export default function WordlePage() {
       if (!game || game.status !== "IN_PROGRESS" || loading) return;
 
       if (key === "ENTER") {
-        if (currentGuess.length !== 5) {
-          // Could add a toast here
+        if (currentGuess.length !== WORD_LENGTH) {
           return;
         }
 
         setLoading(true);
         try {
           const guessResult = await apiClient.makeWordleGuess(game.id, currentGuess);
-          
+
           const isFinished = guessResult.status !== "IN_PROGRESS";
           if (isFinished) {
             // Fetch final game representation to retrieve targetWord (secured anti-cheat)
@@ -77,9 +88,9 @@ export default function WordlePage() {
             });
           }
           setCurrentGuess("");
-        } catch (err: any) {
+        } catch (err: unknown) {
           // API throws 400 if word not in dict (in a real app), or game over
-          setError(err.response?.data?.message || "Invalid guess");
+          setError(getErrorMessage(err, "Invalid guess"));
           setTimeout(() => setError(""), 3000);
         } finally {
           setLoading(false);
@@ -87,7 +98,7 @@ export default function WordlePage() {
       } else if (key === "BACKSPACE") {
         setCurrentGuess((prev) => prev.slice(0, -1));
       } else if (/^[A-Z]$/.test(key)) {
-        if (currentGuess.length < 5) {
+        if (currentGuess.length < WORD_LENGTH) {
           setCurrentGuess((prev) => prev + key);
         }
       }
